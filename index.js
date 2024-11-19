@@ -40,7 +40,7 @@ const vanRoute = require('./routes/vanRoute');
 
 const path = require('path');
 const fs = require('fs');
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5966
 const MONGO_URL = process.env.MONGO_URL
 const FRONTEND = process.env.FRONTEND
 const cookieParser = require('cookie-parser')
