@@ -3,7 +3,7 @@ const { addCategory, getAllCategories, getCategoryById, updateCategoryById, dele
 const router = express.Router();
 
 router.post('/add', addCategory);
-router.get('/', getAllCategories); // Get all Troubleshooting category
+router.get('/', getAllCategories); // Get all Troubleshooting
 router.get('/:categoryId', getCategoryById);
 router.put('/:categoryId', updateCategoryById);
 router.delete('/:categoryId', deleteCategory); 
