@@ -29,6 +29,7 @@ const profileManageRoute = require('./routes/profileManageRoute')
 const jobRoutes = require('./routes/jobRoutes')
 const timeTrackRoute = require('./routes/timeTrackRoute');
 const contactUsRoute = require('./routes/contactUsRoute');
+const deviceTokenRoutes = require('./routes/devicetokenRoute');
 // const categoryItemImageRoute = require('./routes/category-item-imageRoute');
 // const categoryItemVideoRoute = require('./routes/category-item-videoRoute');
 // const categoryItemPdfRoute = require('./routes/category-item-pdfRoute');
@@ -101,6 +102,7 @@ app.use('/api/contactUs', contactUsRoute);
 app.use('/api/inventoryCategory', inventoryCategoryRoute);
 app.use('/api/categoryItem', categoryItemRoute);
 app.use('/api/vans', vanRoute);
+app.use('/api',deviceTokenRoutes);
 
 
 
