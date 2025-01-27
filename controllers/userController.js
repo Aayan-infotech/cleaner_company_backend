@@ -163,7 +163,6 @@ const updateUser = async (req, res, next) => {
     }
 };
 
-
 //delete user
 const deleteUser = async (req, res, next) => {
     try {

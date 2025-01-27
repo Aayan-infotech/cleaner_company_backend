@@ -232,6 +232,58 @@ exports.getAllEmployeeTimeLogs = async (req, res, next) => {
     }
 };
 
+exports.getEmployeeTimeLogsById = async (req, res, next) => {
+    try {
+        const { employeeId } = req.params;
+        const { page = 1, limit = 10 } = req.query;
+
+        
+        const skip = (page - 1) * limit; //pagination
+
+        
+        const timeRecords = await TimeRecord.find({ employeeId })
+            .sort({ date: -1 }) //latest date first
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const totalRecords = await TimeRecord.countDocuments({ employeeId});
+        const totalPages = Math.ceil(totalRecords / limit);
+
+
+        const records = timeRecords.map(record => ({
+            date: record.date,
+            timeRecordDetails: {
+                clockIn: record.clockIn,
+                morningMeetingStart: record.morningMeetingStart,
+                morningMeetingEnd: record.morningMeetingEnd,
+                lunchStart: record.lunchStart,
+                lunchEnd: record.lunchEnd,
+                maintenanceStart: record.maintenanceStart,
+                maintenanceEnd: record.maintenanceEnd,
+                breakStart: record.breakStart,
+                breakEnd: record.breakEnd,
+                clockOut: record.clockOut,
+                status: record.status,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            },
+        }));
+
+        // Response
+        res.status(200).json({
+            status: "success",
+            message: "User details retrieved successfully",
+            data: {
+                currentPage: parseInt(page),
+                totalPages: totalPages,
+                totalRecords: totalRecords,
+                records: records,
+            },
+        });
+    } catch (error) {
+        next(createError(500, "Internal Server Error!"));
+    }
+};
 // delete log by id
 exports.deleteEmployeeLogsByDate = async (req, res, next) => {
     const { employeeId, date } = req.params;

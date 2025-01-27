@@ -5,6 +5,7 @@ const router = express.Router();
 router.post('/time', timeRecordController.createTimeRecord);
 router.put('/:timeRecordId', timeRecordController.updateTimeRecord);
 router.get('/:date', timeRecordController.getAllEmployeeTimeLogs);
+router.get('/time-logs/:employeeId', timeRecordController.getEmployeeTimeLogsById);
 router.get('/time-logs/:employeeId/:date', timeRecordController.getAllTimeLogs);
 router.delete('/:employeeId/:date', timeRecordController.deleteEmployeeLogsByDate);
 
