@@ -5,7 +5,6 @@ const createSuccess = require('../middleware/success');
 const path = require('path');
 const fs = require('fs');
 
-// for add new item
 exports.createItem = async (req, res, next) => {
     try {
         const { categoryId } = req.params;
