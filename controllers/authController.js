@@ -93,7 +93,7 @@ if(!user){
     pass:"yver vjuu fvbb hcot"
    }
  });
- //const resetLink = `http://44.196.64.110:5967/reset/${token}`;
+ //const resetLink = `http://localhost:5967/reset/${token}`;
  let mailDetails={
   from: "ut.gupta29@gmail.com",
   subject: "Reset Password !",
@@ -178,7 +178,7 @@ const sendEmail1 = async (req, res, next) => {
     user.otpExpiration = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    const ResetPasswordLink = `http://44.196.64.110:5966/reset-password?token=${otp}`;
+  const ResetPasswordLink = `http://44.196.64.110:5966/reset-password?token=${otp}`;
 
     const mailTransporter = nodemailer.createTransport({
       service: "gmail",
