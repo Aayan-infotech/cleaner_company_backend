@@ -1,7 +1,6 @@
 const admin = require("firebase-admin");
 const AWS = require("aws-sdk");
 
-// Initialize AWS SDK
 AWS.config.update({ region: 'us-east-1' });
 
 const secretsManager = new AWS.SecretsManager();
