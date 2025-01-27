@@ -36,7 +36,7 @@ const deviceTokenRoutes = require('./routes/devicetokenRoute');
 const inventoryCategoryRoute = require('./routes/inventoryCategoryRoute');
 const categoryItemRoute = require('./routes/categoryItemRoute');
 const vanRoute = require('./routes/vanRoute');
-
+const pushNotificationRoute = require('./routes/pushNotificationRoute');
 
 
 const path = require('path');
@@ -103,7 +103,7 @@ app.use('/api/inventoryCategory', inventoryCategoryRoute);
 app.use('/api/categoryItem', categoryItemRoute);
 app.use('/api/vans', vanRoute);
 app.use('/api',deviceTokenRoutes);
-
+app.use('/api/notification',pushNotificationRoute);
 
 
 
