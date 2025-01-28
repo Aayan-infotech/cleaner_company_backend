@@ -39,7 +39,25 @@ const getAllDeviceTokens = async (req, res, next) => {
   }
 };
 
+const getTokenByUserId = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const deviceToken = await DeviceToken.findOne({ userId });
+
+    if (!deviceToken) {
+      return res.status(404).json({ message: 'Device token not found for this user.' });
+    }
+
+    res.status(200).json({ message: 'Device token fetched successfully.', deviceToken });
+  } catch (error) {
+    console.error('Error fetching device token:', error);
+    res.status(500).json({ message: 'Internal server error.', error });
+  }
+}
+
 module.exports = {
   createDeviceToken,
   getAllDeviceTokens,
+  getTokenByUserId
 };

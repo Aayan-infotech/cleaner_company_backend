@@ -93,7 +93,7 @@ if(!user){
     pass:"yver vjuu fvbb hcot"
    }
  });
- //const resetLink = `http://localhost:5967/reset/${token}`;
+ //const resetLink = `http://44.196.64.110:5967/reset/${token}`;
  let mailDetails={
   from: "ut.gupta29@gmail.com",
   subject: "Reset Password !",
