@@ -5,11 +5,9 @@ const createSuccess = require('../middleware/success');
 
 exports.sendPushNotification = async (req, res) => {
   const {  userId, token, title, body } = req.body; 
-  console.log(req.body)
 
   const message = {
     notification: {
-      // userId : userId,
       title: title,
       body: body,
     },
