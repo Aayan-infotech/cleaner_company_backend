@@ -33,8 +33,7 @@ exports.getNotificationsByUserId = async (req, res, next) => {
   }
 
   try {
-    const notifications = await Notification.find({ userId });
-
+    const notifications = await Notification.find({ userId }).sort({ timestamp: -1 });
     if (notifications.length === 0) {
       return next(createSuccess(200, "No notifications found for this user.", []));
     }
