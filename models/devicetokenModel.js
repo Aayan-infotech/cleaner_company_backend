@@ -9,8 +9,7 @@ const devicetokenSchema = new Schema ({
       },
       token: {
         type: String,
-        required: true,
-        unique: true, 
+        required: true
       },
 });
 module.exports = mongoose.model('deviceToken', devicetokenSchema);

@@ -10,16 +10,10 @@ const createDeviceToken = async (req, res, next) => {
       return next(createError(400, "userId and token are required."));
     }
 
-    const existingToken = await DeviceToken.findOne({ token });
-
-    if (existingToken && existingToken.userId.toString() !== userId) {
-      return next(createError(400, "Token is already used for another user."));
-    }
-
     const updatedToken = await DeviceToken.findOneAndUpdate(
       { userId }, 
       { token }, 
-      { new: true, upsert: true } 
+      { new: true } 
     );
 
     return next(createSuccess(201, "Device Token created/updated successfully.", updatedToken));
