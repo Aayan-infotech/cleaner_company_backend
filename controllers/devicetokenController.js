@@ -8,12 +8,12 @@ const createDeviceToken = async (req, res, next) => {
 
     if (!userId || !token) {
       return next(createError(400, "userId and token are required."));
-    }
+    }    
 
     const updatedToken = await DeviceToken.findOneAndUpdate(
-      { userId }, 
-      { token }, 
-      { new: true } 
+      {userId} , 
+       {token} , 
+      { new: true, upsert:true}
     );
 
     return next(createSuccess(201, "Device Token created/updated successfully.", updatedToken));
@@ -22,7 +22,6 @@ const createDeviceToken = async (req, res, next) => {
     return next(createError(500, "Internal Server Error."));
   }
 };
-
 const getAllDeviceTokens = async (req, res, next) => {
   try {
     const deviceTokens = await DeviceToken.find();
