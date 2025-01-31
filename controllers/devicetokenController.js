@@ -4,14 +4,14 @@ const createSuccess = require('../middleware/success');
 
 const createDeviceToken = async (req, res, next) => {
   try {
-    const { userId, token } = req.body;
+    const { employeeId, token } = req.body;
 
-    if (!userId || !token) {
-      return next(createError(400, "userId and token are required."));
+    if (!employeeId || !token) {
+      return next(createError(400, "employeeId and token are required."));
     }    
 
     const updatedToken = await DeviceToken.findOneAndUpdate(
-      {userId} , 
+      {employeeId} , 
        {token} , 
       { new: true, upsert:true}
     );
