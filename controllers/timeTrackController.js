@@ -1,3 +1,4 @@
+const Leave = require('../models/leaveModel')
 const TimeRecord = require('../models/timeTrackModel');
 const Event = require('../models/eventsModel');
 const createError = require('../middleware/error');
@@ -11,6 +12,17 @@ exports.createTimeRecord = async (req, res, next) => {
     try {
         if (!eventId || !employeeId || !date) {
             return next(createError(400, "Event ID, Employee ID, and Date are required."));
+        }
+
+        // Check if the employee has an approved leave on the given date
+        const leaveRecord = await Leave.findOne({
+            employeeId,
+            startDate: { $lte: date },
+            endDate: { $gte: date }
+        });
+
+        if (leaveRecord) {
+            return next(createError(400, "Time log cannot be created as the employee is on leave."));
         }
 
         // Create and save the TimeRecord
@@ -33,6 +45,7 @@ exports.createTimeRecord = async (req, res, next) => {
     }
 };
 
+
 // update details by id
 exports.updateTimeRecord = async (req, res, next) => {
     const { timeRecordId } = req.params;
@@ -51,124 +64,70 @@ exports.updateTimeRecord = async (req, res, next) => {
     }
 };
 
-// get all logs
+// get all logs by employeeid and date
 exports.getAllTimeLogs = async (req, res, next) => {
     try {
         const { employeeId, date } = req.params;
+        if (!employeeId || !date) {
+            return next(createError(400, "Employee ID and Date are required."));
+        }
         const startDate = new Date(date);
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);  // To cover the full day
+        endDate.setDate(endDate.getDate() + 1);
 
-        // Find time records for the employee on the specified date
         const timeRecords = await TimeRecord.find({
             employeeId: employeeId,
-            date: {
-                $gte: startDate,
-                $lt: endDate
-            }
+            date: { $gte: startDate, $lt: endDate }
         });
 
-        let totalWorkingTimeMs = 0;
-        let totalBreakTimeMs = 0;
-        let totalMorningMeetingTimeMs = 0;
-        let totalLunchTimeMs = 0;
-        let totalMaintenanceTimeMs = 0;
-
-        timeRecords.forEach(record => {
-            const clockIn = new Date(record.clockIn);
-            const clockOut = record.clockOut ? new Date(record.clockOut) : null;
-            const morningMeetingStart = record.morningMeetingStart ? new Date(record.morningMeetingStart) : null;
-            const morningMeetingEnd = record.morningMeetingEnd ? new Date(record.morningMeetingEnd) : null;
-            const lunchStart = record.lunchStart ? new Date(record.lunchStart) : null;
-            const lunchEnd = record.lunchEnd ? new Date(record.lunchEnd) : null;
-            const maintenanceStart = record.maintenanceStart ? new Date(record.maintenanceStart) : null;
-            const maintenanceEnd = record.maintenanceEnd ? new Date(record.maintenanceEnd) : null;
-            const breakStart = record.breakStart ? new Date(record.breakStart) : null;
-            const breakEnd = record.breakEnd ? new Date(record.breakEnd) : null;
-
-            // Calculate total working time
-            if (clockIn && clockOut) {
-                totalWorkingTimeMs += (clockOut - clockIn);
-            }
-
-            // Calculate total break time
-            if (breakStart && breakEnd) {
-                totalBreakTimeMs += (breakEnd - breakStart);
-            }
-
-            // Calculate total morning meeting time
-            if (morningMeetingStart && morningMeetingEnd) {
-                totalMorningMeetingTimeMs += (morningMeetingEnd - morningMeetingStart);
-            }
-
-            // Calculate total lunch time
-            if (lunchStart && lunchEnd) {
-                totalLunchTimeMs += (lunchEnd - lunchStart);
-            }
-
-            // Calculate total maintenance time
-            if (maintenanceStart && maintenanceEnd) {
-                totalMaintenanceTimeMs += (maintenanceEnd - maintenanceStart);
-            }
+        const leaveRecord = await Leave.findOne({
+            employeeId,
+            startDate: { $lte: startDate },
+            endDate: { $gt: startDate } 
         });
 
-        // Convert milliseconds to hours and minutes
-        const convertMsToHM = (ms) => {
-            const totalMinutes = Math.floor(ms / (1000 * 60));
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            return { hours, minutes };
-        };
-
-        const totalWorkingTimeHM = convertMsToHM(totalWorkingTimeMs);
-        const totalBreakTimeHM = convertMsToHM(totalBreakTimeMs);
-        const totalMorningMeetingTimeHM = convertMsToHM(totalMorningMeetingTimeMs);
-        const totalLunchTimeHM = convertMsToHM(totalLunchTimeMs);
-        const totalMaintenanceTimeHM = convertMsToHM(totalMaintenanceTimeMs);
-
-        // Calculate Total Productive Time
-        const totalWorkingMinutes = totalWorkingTimeHM.hours * 60 + totalWorkingTimeHM.minutes;
-        const totalBreakMinutes = totalBreakTimeHM.hours * 60 + totalBreakTimeHM.minutes;
-        const totalMorningMeetingMinutes = totalMorningMeetingTimeHM.hours * 60 + totalMorningMeetingTimeHM.minutes;
-        const totalLunchMinutes = totalLunchTimeHM.hours * 60 + totalLunchTimeHM.minutes;
-        const totalMaintenanceMinutes = totalMaintenanceTimeHM.hours * 60 + totalMaintenanceTimeHM.minutes;
-
-        const totalNonProductiveMinutes = totalBreakMinutes + totalMorningMeetingMinutes + totalLunchMinutes + totalMaintenanceMinutes;
-        const totalProductiveMinutes = totalWorkingMinutes - totalNonProductiveMinutes;
-
-        const totalProductiveTimeHM = convertMsToHM(totalProductiveMinutes * 60 * 1000); // Convert back to ms
-
-        return next(createSuccess(200, "Time logs retrieved successfully", {
-            totalWorkingTime: `${totalWorkingTimeHM.hours}h ${totalWorkingTimeHM.minutes}m`,
-            totalMorningMeetingTime: `${totalMorningMeetingTimeHM.hours}h ${totalMorningMeetingTimeHM.minutes}m`,
-            totalLunchTime: `${totalLunchTimeHM.hours}h ${totalLunchTimeHM.minutes}m`,
-            totalBreakTime: `${totalBreakTimeHM.hours}h ${totalBreakTimeHM.minutes}m`,
-            totalMaintenanceTime: `${totalMaintenanceTimeHM.hours}h ${totalMaintenanceTimeHM.minutes}m`,
-            totalProductiveTime: `${totalProductiveTimeHM.hours}h ${totalProductiveTimeHM.minutes}m`,
-            timeRecords: timeRecords.map(record => ({
-                _id: record._id,
-                eventId: record.eventId,
-                employeeId: record.employeeId,
-                date: record.date,
-                clockIn: record.clockIn,
-                morningMeetingStart: record.morningMeetingStart,
-                morningMeetingEnd: record.morningMeetingEnd,
-                lunchStart: record.lunchStart,
-                lunchEnd: record.lunchEnd,
-                maintenanceStart: record.maintenanceStart,
-                maintenanceEnd: record.maintenanceEnd,
-                breakStart: record.breakStart,
-                breakEnd: record.breakEnd,
-                clockOut: record.clockOut,
-                status: record.status,
-                createdAt: record.createdAt,
-                updatedAt: record.updatedAt,
-            }))
+        let records = timeRecords.map(record => ({
+            _id: record._id,
+            eventId: record.eventId,
+            employeeId: record.employeeId,
+            date: record.date,
+            clockIn: record.clockIn,
+            morningMeetingStart: record.morningMeetingStart,
+            morningMeetingEnd: record.morningMeetingEnd,
+            lunchStart: record.lunchStart,
+            lunchEnd: record.lunchEnd,
+            maintenanceStart: record.maintenanceStart,
+            maintenanceEnd: record.maintenanceEnd,
+            breakStart: record.breakStart,
+            breakEnd: record.breakEnd,
+            clockOut: record.clockOut,
+            status: leaveRecord ? "leave" : record.status, 
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
         }));
+
+        if (records.length === 0 && leaveRecord) {
+            records.push({
+                employeeId,
+                date: startDate,
+                status: "leave",
+                leaveDetails: {
+                    leaveId: leaveRecord._id,
+                    startDate: leaveRecord.startDate,
+                    endDate: leaveRecord.endDate
+                }
+            });
+        }
+
+        return next(createSuccess(200, "Time logs retrieved successfully", records));
     } catch (error) {
-        return next(createError(500, "Internal Server Error!"));
+        console.error("Error fetching time logs:", error); 
+        return next(createError(500, error.message || "Internal Server Error!"));
     }
 };
+
+
+
 
 // get all logs of all employee
 exports.getAllEmployeeTimeLogs = async (req, res, next) => {
@@ -176,7 +135,7 @@ exports.getAllEmployeeTimeLogs = async (req, res, next) => {
         const { date } = req.params;
         const startDate = new Date(date);
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);  // To cover the full day
+        endDate.setDate(endDate.getDate() + 1); 
 
         // Find all time records on the specified date
         const timeRecords = await TimeRecord.find({
@@ -232,45 +191,80 @@ exports.getAllEmployeeTimeLogs = async (req, res, next) => {
     }
 };
 
+//get employee timelogs by id
 exports.getEmployeeTimeLogsById = async (req, res, next) => {
     try {
         const { employeeId } = req.params;
         const { page = 1, limit = 10 } = req.query;
+        const skip = (page - 1) * limit;
 
-        
-        const skip = (page - 1) * limit; //pagination
-
-        
         const timeRecords = await TimeRecord.find({ employeeId })
-            .sort({ date: -1 }) //latest date first
+            .sort({ date: -1 })
             .skip(skip)
             .limit(parseInt(limit));
 
-        const totalRecords = await TimeRecord.countDocuments({ employeeId});
+        const leaveRecords = await Leave.find({ employeeId });
+
+        let records = timeRecords.map(record => {
+            const leaveForThisDay = leaveRecords.some(leave => {
+                const leaveStart = new Date(leave.startDate);
+                const leaveEnd = new Date(leave.endDate);
+                leaveEnd.setDate(leaveEnd.getDate() - 1); 
+                
+                return new Date(record.date) >= leaveStart && new Date(record.date) <= leaveEnd;
+            });
+
+            return {
+                date: record.date,
+                status: leaveForThisDay ? "leave" : record.status,
+                leaveDetails: leaveForThisDay
+                    ? { leaveId: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate))._id, startDate: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate)).startDate, endDate: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate)).endDate }
+                    : null,
+                timeRecordDetails: {
+                    clockIn: record.clockIn,
+                    morningMeetingStart: record.morningMeetingStart,
+                    morningMeetingEnd: record.morningMeetingEnd,
+                    lunchStart: record.lunchStart,
+                    lunchEnd: record.lunchEnd,
+                    maintenanceStart: record.maintenanceStart,
+                    maintenanceEnd: record.maintenanceEnd,
+                    breakStart: record.breakStart,
+                    breakEnd: record.breakEnd,
+                    clockOut: record.clockOut,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                },
+            };
+        });
+//logs with leave also seen
+        leaveRecords.forEach(leave => {
+            let currentDate = new Date(leave.startDate);
+            let adjustedEndDate = new Date(leave.endDate);
+            adjustedEndDate.setDate(adjustedEndDate.getDate() - 1); 
+            
+            while (currentDate <= adjustedEndDate) {
+                if (!records.some(r => new Date(r.date).toDateString() === currentDate.toDateString())) {
+                    records.push({
+                        date: new Date(currentDate),
+                        status: "leave",
+                        leaveDetails: {
+                            leaveId: leave._id,
+                            startDate: leave.startDate,
+                            endDate: leave.endDate
+                        },
+                        timeRecordDetails: {} 
+                    });
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        });
+//sort datewise new date first
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const totalRecords = timeRecords.length + leaveRecords.length; 
         const totalPages = Math.ceil(totalRecords / limit);
 
-
-        const records = timeRecords.map(record => ({
-            date: record.date,
-            timeRecordDetails: {
-                clockIn: record.clockIn,
-                morningMeetingStart: record.morningMeetingStart,
-                morningMeetingEnd: record.morningMeetingEnd,
-                lunchStart: record.lunchStart,
-                lunchEnd: record.lunchEnd,
-                maintenanceStart: record.maintenanceStart,
-                maintenanceEnd: record.maintenanceEnd,
-                breakStart: record.breakStart,
-                breakEnd: record.breakEnd,
-                clockOut: record.clockOut,
-                status: record.status,
-                createdAt: record.createdAt,
-                updatedAt: record.updatedAt,
-            },
-        }));
-
-        // Response
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
             message: "User details retrieved successfully",
             data: {
@@ -281,9 +275,13 @@ exports.getEmployeeTimeLogsById = async (req, res, next) => {
             },
         });
     } catch (error) {
+        console.error("Error fetching employee time logs:", error);
         next(createError(500, "Internal Server Error!"));
     }
 };
+
+
+
 // delete log by id
 exports.deleteEmployeeLogsByDate = async (req, res, next) => {
     const { employeeId, date } = req.params;

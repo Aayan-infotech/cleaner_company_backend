@@ -17,7 +17,7 @@ const timeRecordSchema = new Schema(
         maintenanceEnd: Date,
         clockOut: Date,
         notes: String,
-        // status: { type: String, enum: ['complete', 'inprogress', 'pending'], default: 'pending' }  
+        status: { type: String, enum: ['worked', 'leave'], default: 'worked' },
     },
     {
         timestamps: true

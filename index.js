@@ -30,6 +30,7 @@ const jobRoutes = require('./routes/jobRoutes')
 const timeTrackRoute = require('./routes/timeTrackRoute');
 const contactUsRoute = require('./routes/contactUsRoute');
 const deviceTokenRoutes = require('./routes/devicetokenRoute');
+const employeeManagement = require('./routes/employeeManagementRoute');
 // const categoryItemImageRoute = require('./routes/category-item-imageRoute');
 // const categoryItemVideoRoute = require('./routes/category-item-videoRoute');
 // const categoryItemPdfRoute = require('./routes/category-item-pdfRoute');
@@ -37,6 +38,7 @@ const inventoryCategoryRoute = require('./routes/inventoryCategoryRoute');
 const categoryItemRoute = require('./routes/categoryItemRoute');
 const vanRoute = require('./routes/vanRoute');
 const pushNotificationRoute = require('./routes/pushNotificationRoute');
+const leaveRoute = require('./routes/leaveRoute');
 
 
 const path = require('path');
@@ -99,11 +101,13 @@ app.use('/api/contactUs', contactUsRoute);
 // app.use('/api/categoryImage', categoryItemImageRoute);
 // app.use('/api/categoryVideo', categoryItemVideoRoute);
 // app.use('/api/categoryPdf', categoryItemPdfRoute);
+app.use('/api/employee', employeeManagement);
 app.use('/api/inventoryCategory', inventoryCategoryRoute);
 app.use('/api/categoryItem', categoryItemRoute);
 app.use('/api/vans', vanRoute);
 app.use('/api',deviceTokenRoutes);
 app.use('/api/notification',pushNotificationRoute);
+app.use('/api/leave', leaveRoute);
 
 
 
