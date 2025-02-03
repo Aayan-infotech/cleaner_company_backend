@@ -4,7 +4,7 @@ const createError = require('../middleware/error')
 const createSuccess = require('../middleware/success');
 
 exports.sendPushNotification = async (req, res) => {
-  const {  EmployeeId , token, title, body } = req.body; 
+  const {  employeeId , token, title, body } = req.body; 
 
   const message = {
     notification: {
@@ -16,7 +16,7 @@ exports.sendPushNotification = async (req, res) => {
 
   try {
     await admin.messaging().send(message);
-   const notificationData= await Notification.create({EmployeeId,title,body});
+   const notificationData= await Notification.create({employeeId,title,body});
     res.status(200).json({ message: "Notification sent successfully" });
   } catch (error) {
     console.error("Error sending notification:", error);
@@ -26,14 +26,14 @@ exports.sendPushNotification = async (req, res) => {
 
 
 exports.getNotificationsByEmployeeId = async (req, res, next) => {
-  const { EmployeeId } = req.params; 
+  const { employeeId } = req.params; 
 
-  if (!EmployeeId) {
+  if (!employeeId) {
     return next(createError(400, "Employee ID is required."));
   }
 
   try {
-    const notifications = await Notification.find({ EmployeeId }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ employeeId }).sort({ createdAt: -1 });
     if (notifications.length === 0) {
       return next(createSuccess(200, "No notifications found for this user.", []));
     }

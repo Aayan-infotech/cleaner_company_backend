@@ -7,5 +7,5 @@ const router = express.Router();
 router.post('/device-token', createDeviceToken);
 
 router.get('/getAllTokens', getAllDeviceTokens);
-router.get('/getToken/:EmployeeId', getTokenByEmployeeId);
+router.get('/getToken/:employeeId', getTokenByEmployeeId);
 module.exports = router;
