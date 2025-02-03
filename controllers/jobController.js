@@ -5,7 +5,7 @@ const createSuccess = require('../middleware/success')
 
 exports.getJobs = async (req, res, next) => {
     try {
-        const jobs = await Job.find({ technician: req.user.username });
+        const jobs = await Job.find({ });
         return next(createSuccess(200, "Job Assign Created", jobs));
     } catch (err) {
         return next(createError(500, "Internal Server Error!"))
@@ -14,7 +14,7 @@ exports.getJobs = async (req, res, next) => {
 
 exports.createJob = async (req, res, next) => {
     const role = await Role.findOne({ role: 'Tech' });
-    const { clientName, clientEmail, date, address, technician ,userId,phoneNumber} = req.body;
+    const { clientName, clientEmail, date, address, technician ,employeeId,phoneNumber} = req.body;
 
     const newJob = new Job({
         clientName,
@@ -22,7 +22,7 @@ exports.createJob = async (req, res, next) => {
         date,
         address,
         technician,
-        userId,
+        employeeId,
         phoneNumber,
         roles: role
     });
@@ -72,8 +72,8 @@ exports.deleteJob = async (req, res, next) => {
 
 exports.getJobsByTechnician = async (req, res, next) => {
     try {
-        const userId = req.params.userId;
-        const jobs = await Job.find({ userId });
+        const employeeId = req.params.employeeId;
+        const jobs = await Job.find({ employeeId });
         return next(createSuccess(200, "Job Get All", jobs));
     } catch (err) {
         return next(createError(500, "Internal Server Error!"))

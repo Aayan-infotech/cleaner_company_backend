@@ -7,7 +7,7 @@ const User = require('../models/userModel');
 // Create a new event
 const createEvent = async (req, res, next) => {
   try {
-    const { title, date, startTime, endTime, description, EmployeeName, clientName, clientEmail, address, clientContact } = req.body;
+    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact } = req.body;
 
     // Generate a random jobId with the format J-XXXX
     const generateJobId = () => {
@@ -17,7 +17,7 @@ const createEvent = async (req, res, next) => {
 
     const jobId = generateJobId();
 
-    const newEvent = new Event({ title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address, clientContact, status: 'pending' });
+    const newEvent = new Event({ title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status: 'pending' });
     await newEvent.save();
  
     const populatedEvent = await Event.findById(newEvent._id);
@@ -59,10 +59,10 @@ const getEventById = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const { title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address,clientContact, status } = req.body;
+    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status } = req.body;
    
     const updatedEvent = await Event.findByIdAndUpdate( eventId,
-      { title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address,clientContact, status },
+      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status },
       { new: true }
     );
 
@@ -94,8 +94,8 @@ const deleteEvent = async (req, res, next) => {
 // Get events by userName
 const getEventsByEmployeeName = async (req, res, next) => {
   try {
-    const EmployeeName = req.params.EmployeeName;  // Extract userName from request params
-    const events = await Event.find({ EmployeeName });  // Query events by userName
+    const employeeName = req.params.employeeName;  // Extract userName from request params
+    const events = await Event.find({ employeeName });  // Query events by userName
 
     if (events.length === 0) {
       return res.status(404).json(createError(404, "No events found for this Employee"));
