@@ -206,11 +206,11 @@ exports.getEmployeeTimeLogsById = async (req, res, next) => {
         const leaveRecords = await Leave.find({ employeeId });
 
         let records = timeRecords.map(record => {
-            const leaveForThisDay = leaveRecords.some(leave => {
+            const leaveForThisDay = leaveRecords.find(leave => {
                 const leaveStart = new Date(leave.startDate);
                 const leaveEnd = new Date(leave.endDate);
                 leaveEnd.setDate(leaveEnd.getDate() - 1); 
-                
+
                 return new Date(record.date) >= leaveStart && new Date(record.date) <= leaveEnd;
             });
 
@@ -218,7 +218,7 @@ exports.getEmployeeTimeLogsById = async (req, res, next) => {
                 date: record.date,
                 status: leaveForThisDay ? "leave" : record.status,
                 leaveDetails: leaveForThisDay
-                    ? { leaveId: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate))._id, startDate: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate)).startDate, endDate: leaveRecords.find(leave => new Date(record.date) >= new Date(leave.startDate) && new Date(record.date) < new Date(leave.endDate)).endDate }
+                    ? { leaveId: leaveForThisDay._id, startDate: leaveForThisDay.startDate, endDate: leaveForThisDay.endDate }
                     : null,
                 timeRecordDetails: {
                     clockIn: record.clockIn,
@@ -236,7 +236,7 @@ exports.getEmployeeTimeLogsById = async (req, res, next) => {
                 },
             };
         });
-//logs with leave also seen
+
         leaveRecords.forEach(leave => {
             let currentDate = new Date(leave.startDate);
             let adjustedEndDate = new Date(leave.endDate);
@@ -258,10 +258,10 @@ exports.getEmployeeTimeLogsById = async (req, res, next) => {
                 currentDate.setDate(currentDate.getDate() + 1);
             }
         });
-//sort datewise new date first
+
         records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const totalRecords = timeRecords.length + leaveRecords.length; 
+        const totalRecords = await TimeRecord.countDocuments({ employeeId }) + leaveRecords.length;
         const totalPages = Math.ceil(totalRecords / limit);
 
         return res.status(200).json({

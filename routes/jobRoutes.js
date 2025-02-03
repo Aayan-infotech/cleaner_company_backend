@@ -18,6 +18,6 @@ router.put('/:id', jobController.updateJob);
 router.delete('/:id', jobController.deleteJob);
 
 // Get all jobs scheduled by the logged-in technician
-router.get('/myjobs/:userId', jobController.getJobsByTechnician);
+router.get('/myjobs/:EmployeeId', jobController.getJobsByTechnician);
 
 module.exports = router;

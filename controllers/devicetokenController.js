@@ -32,11 +32,11 @@ const getAllDeviceTokens = async (req, res, next) => {
   }
 };
 
-const getTokenByUserId = async (req, res) => {
-  const { userId } = req.params;
+const getTokenByEmployeeId = async (req, res) => {
+  const { employeeId } = req.params;
 
   try {
-    const deviceToken = await DeviceToken.findOne({ userId });
+    const deviceToken = await DeviceToken.findOne({ employeeId });
 
     if (!deviceToken) {
       return res.status(404).json({ message: 'Device token not found for this user.' });
@@ -52,5 +52,5 @@ const getTokenByUserId = async (req, res) => {
 module.exports = {
   createDeviceToken,
   getAllDeviceTokens,
-  getTokenByUserId
+  getTokenByEmployeeId
 };
