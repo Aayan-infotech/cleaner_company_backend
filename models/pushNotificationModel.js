@@ -3,9 +3,9 @@ const Schema = mongoose.Schema;
 
 const pushNotificationSchema = new Schema(
   {
-    userId: {
+    EmployeeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user', 
+            ref: 'Employee', 
             required: true,
           },
     title: {

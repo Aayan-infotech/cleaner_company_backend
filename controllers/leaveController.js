@@ -107,7 +107,7 @@ exports.deleteLeave = async (req, res, next) => {
             await record.save();
         }
 
-        await leave.delete();
+        await leave.deleteOne();
 
         return next(createSuccess(200, "Leave deleted and time logs reverted."));
     } catch (error) {
