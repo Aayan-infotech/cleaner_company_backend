@@ -94,7 +94,7 @@ const createEstimate = async (req, res, next) => {
             totalSquareFoot,
             selectedServices,
             totalEstimate,
-            jobId: estimate.jobId
+            jobId
           };
         } catch (error) {
           console.error('Error processing estimate:', error);
