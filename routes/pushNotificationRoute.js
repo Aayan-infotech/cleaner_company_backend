@@ -4,7 +4,7 @@ const notificationController = require('../controllers/pushNotificationControlle
 
 router.post('/send-notification', notificationController.sendPushNotification);
 
-router.get('/get-notification/:EmployeeId', notificationController.getNotificationsByEmployeeId);
+router.get('/get-notification/:employeeId', notificationController.getNotificationsByEmployeeId);
 
 router.delete("/delete/:id", notificationController.deleteNotificationById);
 

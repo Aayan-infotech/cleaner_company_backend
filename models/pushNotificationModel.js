@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const pushNotificationSchema = new Schema(
   {
-    EmployeeId: {
+    employeeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Employee', 
             required: true,
