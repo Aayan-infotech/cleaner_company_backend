@@ -7,7 +7,7 @@ const User = require('../models/userModel');
 // Create a new event
 const createEvent = async (req, res, next) => {
   try {
-    const { title, date, startTime, endTime, description, userName, clientName, clientEmail, address, clientContact } = req.body;
+    const { title, date, startTime, endTime, description, EmployeeName, clientName, clientEmail, address, clientContact } = req.body;
 
     // Generate a random jobId with the format J-XXXX
     const generateJobId = () => {
@@ -17,7 +17,7 @@ const createEvent = async (req, res, next) => {
 
     const jobId = generateJobId();
 
-    const newEvent = new Event({ title, date, startTime, endTime, description, userName, jobId, clientName, clientEmail, address, clientContact, status: 'pending' });
+    const newEvent = new Event({ title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address, clientContact, status: 'pending' });
     await newEvent.save();
  
     const populatedEvent = await Event.findById(newEvent._id);
@@ -45,7 +45,7 @@ const getAllEvents = async (req, res, next) => {
 const getEventById = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const event = await Event.findById(eventId).populate('user');  // Populate user details
+    const event = await Event.findById(eventId).populate('Employee');  // Populate user details
     if (!event) {
       return res.status(404).json(createError(404, "Event not found"));
     }
@@ -59,10 +59,10 @@ const getEventById = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const { title, date, startTime, endTime, description, userName, jobId, clientName, clientEmail, address,clientContact, status } = req.body;
+    const { title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address,clientContact, status } = req.body;
    
     const updatedEvent = await Event.findByIdAndUpdate( eventId,
-      { title, date, startTime, endTime, description, userName, jobId, clientName, clientEmail, address,clientContact, status },
+      { title, date, startTime, endTime, description, EmployeeName, jobId, clientName, clientEmail, address,clientContact, status },
       { new: true }
     );
 
@@ -92,13 +92,13 @@ const deleteEvent = async (req, res, next) => {
 };
 
 // Get events by userName
-const getEventsByUserName = async (req, res, next) => {
+const getEventsByEmployeeName = async (req, res, next) => {
   try {
-    const userName = req.params.userName;  // Extract userName from request params
-    const events = await Event.find({ userName });  // Query events by userName
+    const EmployeeName = req.params.EmployeeName;  // Extract userName from request params
+    const events = await Event.find({ EmployeeName });  // Query events by userName
 
     if (events.length === 0) {
-      return res.status(404).json(createError(404, "No events found for this user"));
+      return res.status(404).json(createError(404, "No events found for this Employee"));
     }
 
     return res.status(200).json(createSuccess(200, "Events fetched successfully", events));
@@ -108,5 +108,5 @@ const getEventsByUserName = async (req, res, next) => {
 };
 
 
-module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByUserName };
+module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName };
 

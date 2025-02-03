@@ -7,7 +7,7 @@ const calSchema = new mongoose.Schema(
         startTime: { type: String, required: false },
         endTime: { type: String, required: false },
         description: { type: String, required: false },
-        userName: { type: String, required: false },
+        EmployeeName: { type: String, required: false },
         jobId: { type: String, required: true, unique: true },
         clientName: { type: String, required: false },
         clientEmail: { type: String, required: false },
