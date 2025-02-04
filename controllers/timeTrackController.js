@@ -1,16 +1,15 @@
 const Leave = require('../models/leaveModel')
 const TimeRecord = require('../models/timeTrackModel');
-const Event = require('../models/eventsModel');
 const createError = require('../middleware/error');
 const createSuccess = require('../middleware/success');
 
 
 // create new 
 exports.createTimeRecord = async (req, res, next) => {
-    const { eventId, employeeId, date, clockIn } = req.body;
+    const { employeeId, date, clockIn } = req.body;
 
     try {
-        if (!eventId || !employeeId || !date) {
+        if ( !employeeId || !date) {
             return next(createError(400, "Event ID, Employee ID, and Date are required."));
         }
 
@@ -21,21 +20,21 @@ exports.createTimeRecord = async (req, res, next) => {
             endDate: { $gte: date }
         });
 
+        const existingRecord = await TimeRecord.findOne({ employeeId, date});
+        if (existingRecord) {
+            return next(createError(400, "A time record for this date already exists."));
+        }
+
         if (leaveRecord) {
             return next(createError(400, "Time log cannot be created as the employee is on leave."));
         }
 
         // Create and save the TimeRecord
-        const timeRecord = new TimeRecord({ eventId, employeeId, date, clockIn });
+        const timeRecord = new TimeRecord({ employeeId, date, clockIn });
         await timeRecord.save();
 
         // Fetch and populate the TimeRecord
         const populatedTimeRecord = await TimeRecord.findById(timeRecord._id)
-            .populate({
-                path: 'eventId',
-                select: 'title date startTime endTime description jobId clientName clientEmail clientContact address'
-            })
-            .exec();
 
         return next(createSuccess(200, "Time record created successfully.", populatedTimeRecord));
 
@@ -88,7 +87,6 @@ exports.getAllTimeLogs = async (req, res, next) => {
 
         let records = timeRecords.map(record => ({
             _id: record._id,
-            eventId: record.eventId,
             employeeId: record.employeeId,
             date: record.date,
             clockIn: record.clockIn,
