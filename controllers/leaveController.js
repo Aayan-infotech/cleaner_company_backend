@@ -29,9 +29,9 @@ exports.applyLeave = async (req, res, next) => {
             ]
         });
 
-        if (existingLeave.length > 0) {
-            return next(createError(400, "Leave period overlaps with existing leave."));
-        }
+        // if (existingLeave.length > 0) {
+        //     return next(createError(400, "Leave period overlaps with existing leave."));
+        // }
 
         // Apply leave
         const leave = new Leave({ employeeId, startDate, endDate });
