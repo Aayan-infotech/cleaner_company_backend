@@ -90,17 +90,50 @@ exports.addEmployee = [
 
 exports.getAllEmployees = async (req, res, next) => {
     try {
-        const employees = await Employee.find().populate('employee_vanAssigned', 'vanName');
+        let { page = 1, limit = 10, status, search } = req.query;  
 
-        if (!employees || employees.length === 0) {
-            return next(createError(404, 'No employees found.'));
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        if (isNaN(page) || page < 1) page = 1;
+        if (isNaN(limit) || limit < 1) limit = 10;
+
+        const query = {};
+
+        if (status && ["Active", "Block"].includes(status)) {
+            query.employee_employeeStatus = status;
         }
 
-        return next(createSuccess(200, 'All employees fetched successfully.', employees));
+        if (search) {
+            query.$or = [
+                { employee_name: { $regex: search, $options: "i" } }, 
+                { employee_email: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        const employees = await Employee.find(query)
+            .populate("employee_vanAssigned", "vanName")
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        const totalCount = await Employee.countDocuments(query);
+
+        if (!employees.length) {
+            return next(createError(404, "No employees found."));
+        }
+
+        return next(createSuccess(200, "Employees fetched successfully.", {
+            totalEmployees: totalCount,
+            currentPage: page,
+            totalPages: Math.ceil(totalCount / limit),
+            employees
+        }));
+
     } catch (error) {
-        return next(createError(500, 'Internal Server Error!'));
+        return next(createError(500, "Internal Server Error!"));
     }
 };
+
 
 
 exports.getEmployeeById = async (req, res, next) => {
