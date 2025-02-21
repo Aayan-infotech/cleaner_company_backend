@@ -7,7 +7,7 @@ const User = require('../models/userModel');
 // Create a new event
 const createEvent = async (req, res, next) => {
   try {
-    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact } = req.body;
+    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact,eventType } = req.body;
 
     // Generate a random jobId with the format J-XXXX
     const generateJobId = () => {
@@ -17,7 +17,7 @@ const createEvent = async (req, res, next) => {
 
     const jobId = generateJobId();
 
-    const newEvent = new Event({ title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status: 'pending' });
+    const newEvent = new Event({ title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact,eventType, status: 'pending' });
     await newEvent.save();
  
     const populatedEvent = await Event.findById(newEvent._id);
@@ -59,10 +59,10 @@ const getEventById = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status } = req.body;
+    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status,eventType } = req.body;
    
     const updatedEvent = await Event.findByIdAndUpdate( eventId,
-      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status },
+      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status,eventType},
       { new: true }
     );
 
