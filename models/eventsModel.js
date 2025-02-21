@@ -13,7 +13,8 @@ const calSchema = new mongoose.Schema(
         clientEmail: { type: String, required: false },
         clientContact: { type: String, required: false },
         address: { type: String, required: false },        
-        status: { type: String, enum: ['complete', 'inprogress', 'pending'], default: 'pending' }
+        status: { type: String, enum: ['complete', 'inprogress', 'pending'], default: 'pending' },
+        eventType:{ type: String, required: false },
     },
     {
         timestamps: true
