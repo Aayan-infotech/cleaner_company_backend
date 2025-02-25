@@ -37,9 +37,10 @@ exports.addEmployee = [
                 employee_addNote,
                 employee_address,
                 ins_date,
+                role_assigned
             } = req.body;
 
-            if (!employee_name || !employee_contact || !employee_email || !employee_vanAssigned || !employee_role || !employee_password) {
+            if (!employee_name || !employee_contact || !employee_email || !employee_vanAssigned || !employee_role || !employee_password || !role_assigned) {
                 return next(createError(400, 'Please provide all required fields.'));
             }
 
@@ -70,6 +71,7 @@ exports.addEmployee = [
                 employee_addNote,
                 employee_address,
                 ins_date,
+                role_assigned
             });
 
             const savedEmployee = await employee.save();
@@ -189,6 +191,7 @@ exports.updateEmployeeDetails = [
                 employee_addNote,
                 employee_address,
                 ins_date,
+                role_assigned
             } = req.body;
 
             
@@ -217,6 +220,7 @@ exports.updateEmployeeDetails = [
                     employee_addNote,
                     employee_address,
                     ins_date,
+                    role_assigned
                 },
                 { new: true, runValidators: true } 
             ).populate('employee_vanAssigned', 'vanName');
