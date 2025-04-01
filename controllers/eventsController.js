@@ -7,19 +7,36 @@ const User = require('../models/userModel');
 // Create a new event
 const createEvent = async (req, res, next) => {
   try {
-    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact,eventType } = req.body;
+    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact, eventType, lat, lng } = req.body;
 
     // Generate a random jobId with the format J-XXXX
     const generateJobId = () => {
-      const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates a random 4-digit number
+      const randomNumber = Math.floor(1000 + Math.random() * 9000);
       return `J-${randomNumber}`;
     };
 
     const jobId = generateJobId();
 
-    const newEvent = new Event({ title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact,eventType, status: 'pending' });
+    const newEvent = new Event({ 
+      title, 
+      date, 
+      startTime, 
+      endTime, 
+      description, 
+      employeeName, 
+      jobId, 
+      clientName, 
+      clientEmail, 
+      address, 
+      clientContact, 
+      eventType, 
+      status: 'pending',
+      lat,  
+      lng   
+    });
+
     await newEvent.save();
- 
+
     const populatedEvent = await Event.findById(newEvent._id);
 
     return res.status(200).json(createSuccess(200, "Event Registered Successfully", populatedEvent));
@@ -29,6 +46,7 @@ const createEvent = async (req, res, next) => {
     return next(createError(500, "Failed to register event"));
   }
 };
+
 
 // Get all events
 const getAllEvents = async (req, res, next) => {
@@ -59,10 +77,11 @@ const getEventById = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status,eventType } = req.body;
-   
-    const updatedEvent = await Event.findByIdAndUpdate( eventId,
-      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address,clientContact, status,eventType},
+    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status, eventType, lat, lng } = req.body;
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status, eventType, lat, lng },  // Include lat & lng
       { new: true }
     );
 
@@ -75,6 +94,7 @@ const updateEvent = async (req, res, next) => {
     return next(createError(500, "Failed to update event"));
   }
 };
+
 
 // Delete event by ID
 const deleteEvent = async (req, res, next) => {
