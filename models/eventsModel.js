@@ -15,6 +15,8 @@ const calSchema = new mongoose.Schema(
         address: { type: String, required: false },        
         status: { type: String, enum: ['complete', 'inprogress', 'pending'], default: 'pending' },
         eventType:{ type: String, required: false },
+        lat: { type: Number, required: false },  
+        lng: { type: Number, required: false }, 
     },
     {
         timestamps: true
