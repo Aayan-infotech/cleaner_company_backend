@@ -51,10 +51,9 @@ const createEvent = async (req, res, next) => {
 // Get all events
 const getAllEvents = async (req, res, next) => {
   try {
-    const allEvents = await Event.find() // Populate user details
+    const allEvents = await Event.find().sort({ createdAt: -1 }); // Sort by newest first
     return res.status(200).json(createSuccess(200, "All Events", allEvents));
-  }
-  catch (error) {
+  } catch (error) {
     return next(createError(500, "Failed to fetch events"));
   }
 };
