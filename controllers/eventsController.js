@@ -2,12 +2,28 @@ const Event = require('../models/eventsModel');
 const createError = require('../middleware/error');
 const createSuccess = require('../middleware/success');
 const User = require('../models/userModel');
-
+const Employee = require('../models/employeeManagementModel'); // Needed for nested population (optional)
+const Van = require('../models/vanModel');  
 
 // Create a new event
 const createEvent = async (req, res, next) => {
   try {
-    const { title, date, startTime, endTime, description, employeeName, clientName, clientEmail, address, clientContact, eventType, lat, lng } = req.body;
+    const {
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      employeeName,
+      employeeId, 
+      clientName,
+      clientEmail,
+      address,
+      clientContact,
+      eventType,
+      lat,
+      lng
+    } = req.body;
 
     // Generate a random jobId with the format J-XXXX
     const generateJobId = () => {
@@ -17,30 +33,29 @@ const createEvent = async (req, res, next) => {
 
     const jobId = generateJobId();
 
-    const newEvent = new Event({ 
-      title, 
-      date, 
-      startTime, 
-      endTime, 
-      description, 
-      employeeName, 
-      jobId, 
-      clientName, 
-      clientEmail, 
-      address, 
-      clientContact, 
-      eventType, 
+    const newEvent = new Event({
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      employeeName,
+      employeeId, 
+      jobId,
+      clientName,
+      clientEmail,
+      address,
+      clientContact,
+      eventType,
       status: 'pending',
-      lat,  
-      lng   
+      lat,
+      lng
     });
 
     await newEvent.save();
-
-    const populatedEvent = await Event.findById(newEvent._id);
+    const populatedEvent = await Event.findById(newEvent._id).populate('employeeId');
 
     return res.status(200).json(createSuccess(200, "Event Registered Successfully", populatedEvent));
-
   } catch (error) {
     console.error("Error in createEvent:", error);
     return next(createError(500, "Failed to register event"));
@@ -51,9 +66,19 @@ const createEvent = async (req, res, next) => {
 // Get all events
 const getAllEvents = async (req, res, next) => {
   try {
-    const allEvents = await Event.find().sort({ createdAt: -1 }); // Sort by newest first
+    const allEvents = await Event.find()
+      .sort({ createdAt: -1 }) 
+      .populate({
+        path: 'employeeId',
+        populate: {
+          path: 'employee_vanAssigned',  
+          model: 'Van'
+        }
+      });
+
     return res.status(200).json(createSuccess(200, "All Events", allEvents));
   } catch (error) {
+    console.error("Error in getAllEvents:", error);
     return next(createError(500, "Failed to fetch events"));
   }
 };
@@ -76,13 +101,47 @@ const getEventById = async (req, res, next) => {
 const updateEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
-    const { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status, eventType, lat, lng } = req.body;
+    const {
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      employeeName,
+      employeeId, 
+      jobId,
+      clientName,
+      clientEmail,
+      address,
+      clientContact,
+      status,
+      eventType,
+      lat,
+      lng
+    } = req.body;
 
     const updatedEvent = await Event.findByIdAndUpdate(
       eventId,
-      { title, date, startTime, endTime, description, employeeName, jobId, clientName, clientEmail, address, clientContact, status, eventType, lat, lng },  // Include lat & lng
+      {
+        title,
+        date,
+        startTime,
+        endTime,
+        description,
+        employeeName,
+        employeeId, 
+        jobId,
+        clientName,
+        clientEmail,
+        address,
+        clientContact,
+        status,
+        eventType,
+        lat,
+        lng
+      },
       { new: true }
-    );
+    ).populate('employeeId');
 
     if (!updatedEvent) {
       return res.status(404).json(createError(404, "Event not found"));
@@ -90,6 +149,7 @@ const updateEvent = async (req, res, next) => {
 
     return res.status(200).json(createSuccess(200, "Event updated successfully", updatedEvent));
   } catch (error) {
+    console.error("Error in updateEvent:", error);
     return next(createError(500, "Failed to update event"));
   }
 };

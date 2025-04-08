@@ -8,6 +8,11 @@ const calSchema = new mongoose.Schema(
         endTime: { type: String, required: false },
         description: { type: String, required: false },
         employeeName: { type: String, required: false },
+        employeeId: { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'Employee', 
+            required: true 
+        },
         jobId: { type: String, required: true, unique: true },
         clientName: { type: String, required: false },
         clientEmail: { type: String, required: false },
