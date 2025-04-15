@@ -187,5 +187,43 @@ const getEventsByEmployeeName = async (req, res, next) => {
 };
 
 
-module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName };
+//current date Event 
+
+const getAllCurrentEvents = async (req, res, next) => {
+  try {
+    const startOfDay = new Date().setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
+    const endOfDay = new Date().setUTCHours(23, 59, 59, 999); // 23:59:59 UTC
+
+    const currentEvents = await Event.find({
+      date: {
+        $gte: new Date(startOfDay),
+        $lte: new Date(endOfDay),
+      },
+    })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'employeeId',
+        populate: {
+          path: 'employee_vanAssigned',
+          model: 'Van',
+        },
+      });
+
+    // Handle 404: No events found for the current date
+    if (!currentEvents || currentEvents.length === 0) {
+      return res.status(404).json(createError(404, "No events found for the current date"));
+    }
+
+    // Return the current day's events
+    return res.status(200).json(createSuccess(200, "Current Day Events", currentEvents));
+  } catch (error) {
+    console.error("Error in getAllCurrentEvents:", error);
+    return next(createError(500, "Failed to fetch current day events"));
+  }
+};
+
+
+
+
+module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents };
 

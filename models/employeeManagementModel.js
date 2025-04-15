@@ -35,6 +35,11 @@ const employeeSchema = mongoose.Schema(
             enum: ['Assigned', 'Unassigned'],
             default: 'Assigned',
         },
+        employee_workingStatus: {
+            type: String,
+            enum: ['Offline', 'InService', 'Maintenance'],
+            default: 'Offline',
+        },
         employee_vanAssigned: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Van',
