@@ -37,7 +37,8 @@ exports.addEmployee = [
                 employee_addNote,
                 employee_address,
                 ins_date,
-                role_assigned
+                role_assigned,
+                employee_workingStatus,
             } = req.body;
 
             if (!employee_name || !employee_contact || !employee_email || !employee_vanAssigned || !employee_role || !employee_password || !role_assigned) {
@@ -71,7 +72,8 @@ exports.addEmployee = [
                 employee_addNote,
                 employee_address,
                 ins_date,
-                role_assigned
+                role_assigned,
+                employee_workingStatus
             });
 
             const savedEmployee = await employee.save();
@@ -191,7 +193,8 @@ exports.updateEmployeeDetails = [
                 employee_addNote,
                 employee_address,
                 ins_date,
-                role_assigned
+                role_assigned,
+                employee_workingStatus
             } = req.body;
 
             
@@ -220,7 +223,8 @@ exports.updateEmployeeDetails = [
                     employee_addNote,
                     employee_address,
                     ins_date,
-                    role_assigned
+                    role_assigned,
+                    employee_workingStatus
                 },
                 { new: true, runValidators: true } 
             ).populate('employee_vanAssigned', 'vanName');
