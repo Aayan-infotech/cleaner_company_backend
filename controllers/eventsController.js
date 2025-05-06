@@ -86,8 +86,14 @@ const getAllEvents = async (req, res, next) => {
 // Get event by ID
 const getEventById = async (req, res, next) => {
   try {
-    const eventId = req.params.id;
-    const event = await Event.findById(eventId).populate('Employee');  // Populate user details
+    const id = req.params.id;
+    const event = await Event.findById(id).populate({
+      path: 'employeeId',
+      populate: {
+        path: 'employee_vanAssigned',  
+        model: 'Van'
+      }
+    });  // Populate user details
     if (!event) {
       return res.status(404).json(createError(404, "Event not found"));
     }
@@ -194,12 +200,19 @@ const getAllCurrentEvents = async (req, res, next) => {
     const startOfDay = new Date().setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
     const endOfDay = new Date().setUTCHours(23, 59, 59, 999); // 23:59:59 UTC
 
-    const currentEvents = await Event.find({
+    const { status } = req.query;
+    const query = {
       date: {
         $gte: new Date(startOfDay),
         $lte: new Date(endOfDay),
       },
-    })
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const currentEvents = await Event.find(query)
       .sort({ createdAt: -1 })
       .populate({
         path: 'employeeId',
@@ -209,7 +222,6 @@ const getAllCurrentEvents = async (req, res, next) => {
         },
       });
 
-    // Handle 404: No events found for the current date
     if (!currentEvents || currentEvents.length === 0) {
       return res.status(404).json(createError(404, "No events found for the current date"));
     }
@@ -222,8 +234,48 @@ const getAllCurrentEvents = async (req, res, next) => {
   }
 };
 
+// past jobs Events
+
+const getAllPastEvents = async (req, res, next) => {
+  try {
+    const startOfDay = new Date().setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
+
+    const { status } = req.query;
+
+    const query = {
+      date: {
+        $lt: new Date(startOfDay), // Dates less than the start of the current day
+      },
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const pastEvents = await Event.find(query)
+      .sort({ date: -1 }) 
+      .populate({
+        path: 'employeeId',
+        populate: {
+          path: 'employee_vanAssigned',
+          model: 'Van',
+        },
+      });
+
+    if (!pastEvents || pastEvents.length === 0) {
+      return res.status(404).json(createError(404, "No past events found"));
+    }
+
+    // Return the past events
+    return res.status(200).json(createSuccess(200, "Past Events", pastEvents));
+  } catch (error) {
+    console.error("Error in getAllPastEvents:", error);
+    return next(createError(500, "Failed to fetch past events"));
+  }
+};
 
 
 
-module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents };
+
+module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents,getAllPastEvents };
 
