@@ -1,5 +1,5 @@
 const express = require('express');
-const { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents} = require('../controllers/eventsController');
+const { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents,getAllPastEvents} = require('../controllers/eventsController');
 const router = express.Router();
 
 router.post('/add', createEvent);
@@ -9,5 +9,5 @@ router.put('/:id', updateEvent);
 router.delete('/:id', deleteEvent);
 router.get('/events/employee/:employeeName', getEventsByEmployeeName);
 router.get('/events/current', getAllCurrentEvents);
-
+router.get('/events/past', getAllPastEvents);
 module.exports = router;
