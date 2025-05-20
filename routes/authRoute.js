@@ -19,5 +19,6 @@ router.post("/resetPassword", resetPassword);
 router.post('/send-email1',sendEmail1)
 router.post('/verify-otp1', verifyOTP1);
 router.post('/resetPassword1', resetPassword1);
+//
 
 module.exports = router;
