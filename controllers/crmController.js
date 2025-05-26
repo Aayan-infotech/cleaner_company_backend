@@ -175,13 +175,13 @@ exports.updateCRMById = async (req, res, next) => {
         parsedPhonesSecondary = JSON.parse(secondaryPhones); 
       } else if (Array.isArray(secondaryPhones)) {
         parsedPhonesSecondary = secondaryPhones; 
-      } else if (typeof phones === "object") {
+      } else if (typeof secondaryPhones === "object") {
         parsedPhonesSecondary = [secondaryPhones];
       } else {
         return next(createError(400, "SecondaryPhones data should be an array or object"));
       }
 
-      crm.phones = parsedPhonesSecondary.map(phone => ({
+      crm.secondaryPhones = parsedPhonesSecondary.map(phone => ({
         type: phone.type, 
         number: phone.number
       }));
