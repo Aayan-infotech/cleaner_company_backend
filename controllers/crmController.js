@@ -13,12 +13,17 @@ const defaultImage = {
 // Create new CRM entry
 exports.createCRM = async (req, res, next) => {
   try {
-    const { name, address, email, phones } = req.body;
+    const { name, address, email, phones,paymentOptions, secondaryName, secondaryEmail, secondaryPhones, secondaryAddress } = req.body;
 
     // Parse phones if it's a JSON string
     let parsedPhones = [];
     if (phones) {
       parsedPhones = typeof phones === "string" ? JSON.parse(phones) : phones;
+    }
+
+    let parsedSecondaryPhones = [];
+    if (secondaryPhones) {
+      parsedSecondaryPhones = typeof secondaryPhones === "string" ? JSON.parse(secondaryPhones) : secondaryPhones;
     }
 
     if (!name || !address || !email) {
@@ -52,7 +57,13 @@ exports.createCRM = async (req, res, next) => {
       address,
       email,
       phones: parsedPhones,
-      images
+      images,
+      paymentOptions: paymentOptions ,
+      secondaryName: secondaryName ,   
+      secondaryEmail: secondaryEmail ,
+      secondaryPhones: parsedSecondaryPhones,
+      secondaryAddress: secondaryAddress ,
+
     });
 
     await crm.save();

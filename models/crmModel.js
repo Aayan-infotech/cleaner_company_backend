@@ -29,7 +29,16 @@ const crmSchema = new mongoose.Schema(
     address: { type: String, require: true },
     email: { type: String, unique: true, require: true },
     phones: [phoneSchema],
+    paymentOptions: {
+      type: String,
+      enum: ["cash", "prepaid", "postpaid"],
+      default: "cash",
+    },
     images: { type: [profilePicSchema], default: [defaultImage] },
+    secondaryName: { type: String, required:true },
+    secondaryEmail: { type: String, required:true },
+    secondaryPhones: [phoneSchema],
+    secondaryAddress: { type: String, required:true },  
   },
   { timestamps: true }
 );
