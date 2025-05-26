@@ -135,7 +135,7 @@ exports.getCRMById = async (req, res, next) => {
 exports.updateCRMById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, address, email, phones } = req.body;
+    const { name, address, email, phones, paymentOptions, secondaryName, secondaryEmail, secondaryPhones, secondaryAddress } = req.body;
 
     let crm = await CRM.findById(id);
     if (!crm) {
@@ -145,6 +145,10 @@ exports.updateCRMById = async (req, res, next) => {
     if (name) crm.name = name;
     if (address) crm.address = address;
     if (email) crm.email = email;
+    if (paymentOptions) crm.paymentOptions = paymentOptions;
+    if (secondaryName) crm.secondaryName = secondaryName;
+    if (secondaryEmail) crm.secondaryEmail = secondaryEmail;
+    if (secondaryAddress) crm.secondaryAddress = secondaryAddress;
 
     let parsedPhones = [];
     if (phones) {
@@ -165,7 +169,25 @@ exports.updateCRMById = async (req, res, next) => {
     } else {
       crm.phones = [];  
     }
+ let parsedPhonesSecondary = [];
+    if (secondaryPhones) {
+      if (typeof secondaryPhones === "string") {
+        parsedPhonesSecondary = JSON.parse(secondaryPhones); 
+      } else if (Array.isArray(secondaryPhones)) {
+        parsedPhonesSecondary = secondaryPhones; 
+      } else if (typeof phones === "object") {
+        parsedPhonesSecondary = [secondaryPhones];
+      } else {
+        return next(createError(400, "SecondaryPhones data should be an array or object"));
+      }
 
+      crm.phones = parsedPhonesSecondary.map(phone => ({
+        type: phone.type, 
+        number: phone.number
+      }));
+    } else {
+      crm.secondaryPhones = [];  
+    }
     if (req.files && req.files.length > 0) {
       const images = req.files.map(file => {
         const filename = Date.now() + path.extname(file.originalname);
