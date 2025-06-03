@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const MethodToService = require("../models/methodToService");
 const Service = require("../models/Service");
 const Method = require("../models/Method");
-const Job = require("../models/jobModel");
 const Room = require("../models/Room");
 const Estimate = require("../models/Estimate");
 const createError = require("../middleware/error");
@@ -36,17 +35,12 @@ exports.createEstimate = async (req, res, next) => {
       );
     }
 
-    if (!mongoose.Types.ObjectId.isValid(jobId)) {
-      return next(createError(400, `Invalid jobId: ${jobId}`));
-    }
+   
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       return next(createError(400, `Invalid room: ${roomId}`));
     }
 
-    const jobDoc = await Job.findById(jobId).lean();
-    if (!jobDoc) {
-      return next(createError(404, `Job not found for ID: ${jobId}`));
-    }
+ 
 
     const roomDoc = await Room.findById(roomId).lean();
     if (!roomDoc) {
@@ -160,7 +154,7 @@ exports.createEstimate = async (req, res, next) => {
     const totalEstimate = sumCostPerSqFt * totalSquarefeet;
 
     const newEstimate = await Estimate.create({
-      jobId: new mongoose.Types.ObjectId(jobId),
+      jobId,
       room: new mongoose.Types.ObjectId(roomId),
       length,
       width,

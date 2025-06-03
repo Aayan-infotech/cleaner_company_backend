@@ -21,7 +21,7 @@ const EstimateSchema = new mongoose.Schema({
   totalSquarefeet: { type: Number, required: false },  
   selectedServices: [SelectedServiceSchema],
   totalEstimate: { type: Number, required: true },
-  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
+  jobId: { type:String, required: true },
 }, {
   timestamps: true
 });

@@ -274,8 +274,26 @@ const getAllPastEvents = async (req, res, next) => {
   }
 };
 
+const getJobIdsWhoseEventTypeIsJob = async (req, res, next) => {
+  try {
+    const jobEvents = await Event.find({ eventType: 'Job' }).select('_id jobId title');
 
+    if (!jobEvents || jobEvents.length === 0) {
+      return res.status(404).json(createError(404, "No job events found"));
+    }
 
+    const jobData = jobEvents.map(event => ({
+      _id: event._id,
+      jobId: event.jobId,
+      title: event.title
+    }));
 
-module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents,getAllPastEvents };
+    return res.status(200).json(createSuccess(200, "Job IDs fetched successfully", jobData));
+  } catch (error) {
+    console.error("Error in getJobIdsWhoseEventTypeIsJob:", error.message);
+    return next(createError(500, "Failed to fetch job IDs"));
+  }
+};
+
+module.exports = { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, getEventsByEmployeeName,getAllCurrentEvents,getAllPastEvents,getJobIdsWhoseEventTypeIsJob };
 
