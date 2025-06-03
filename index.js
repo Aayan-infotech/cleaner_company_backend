@@ -116,7 +116,7 @@ app.use('/api/leave', leaveRoute);
 app.use('/api/manage-crm', crmRoutes);
 app.use('/api/group', groupRoutes);
 app.use('/api/methods', methoodRoute);
-app.use('/api/service', serviceRoutes);
+app.use('/api/services', serviceRoutes);
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test
