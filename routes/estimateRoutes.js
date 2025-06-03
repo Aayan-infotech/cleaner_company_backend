@@ -4,7 +4,7 @@ const { createEstimate,getAllEstimates ,getEstimateById,updateEstimate, deleteEs
 const router = express.Router();
 
 router.post('/create', createEstimate);
-router.get('/getAllEstimates', getAllEstimates);
+router.get('/getAll', getAllEstimates);
 router.get('/getById/:id', getEstimateById);
 router.delete('/delete/:id', deleteEstimate);
 
