@@ -6,21 +6,6 @@ const SelectedServiceSchema = new mongoose.Schema({
     name: String,
     price: Number
   },
-  itemClean: {
-    _id: mongoose.Schema.Types.ObjectId,
-    name: String,
-    price: Number
-  },
-  dryCleaning: {
-    _id: mongoose.Schema.Types.ObjectId,
-    name: String,
-    price: Number
-  },
-  hardSurface: {
-    _id: mongoose.Schema.Types.ObjectId,
-    name: String,
-    price: Number
-  },
   method: {
     _id: mongoose.Schema.Types.ObjectId,
     name: String,
@@ -33,10 +18,10 @@ const EstimateSchema = new mongoose.Schema({
   room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
   length: { type: Number, required: true }, 
   width: { type: Number, required: true },  
-  totalSquarefoot: { type: Number, required: false },  
+  totalSquarefeet: { type: Number, required: false },  
   selectedServices: [SelectedServiceSchema],
   totalEstimate: { type: Number, required: true },
-  jobId: { type: String, required: false }
+  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
 }, {
   timestamps: true
 });

@@ -1,10 +1,11 @@
 const express = require('express');
-const { createEstimate,getAllEstimates,deleteEstimate } = require('../controllers/estimateController');
+const { createEstimate,getAllEstimates ,getEstimateById,updateEstimate, deleteEstimate} = require('../controllers/estimateController');
 
 const router = express.Router();
 
-router.post('/submit-estimate', createEstimate);
-router.get('/getAll', getAllEstimates);
-router.delete('/:id', deleteEstimate);
+router.post('/create', createEstimate);
+router.get('/getAllEstimates', getAllEstimates);
+router.get('/getById/:id', getEstimateById);
+router.delete('/delete/:id', deleteEstimate);
 
 module.exports = router;

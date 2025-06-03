@@ -42,6 +42,8 @@ const pushNotificationRoute = require('./routes/pushNotificationRoute');
 const leaveRoute = require('./routes/leaveRoute');
 const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
+const methoodRoute = require('./routes/methodRoute');
+const serviceRoutes = require('./routes/serviceRoutes');
 
 
 const path = require('path');
@@ -114,7 +116,8 @@ app.use('/api/notification',pushNotificationRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/manage-crm', crmRoutes);
 app.use('/api/group', groupRoutes);
-
+app.use('/api/methods', methoodRoute);
+app.use('/api/service', serviceRoutes);
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test

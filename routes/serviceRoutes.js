@@ -1,8 +1,15 @@
 const express = require('express');
-const { getServices,createService} = require('../controllers/serviceController');
-
 const router = express.Router();
+const serviceController = require('../controllers/serviceController');
 
-router.get('/services', getServices);
-router.post('/services', createService);
+router.post('/create', serviceController.createService);
+router.get('/getAll', serviceController.getAllServices);
+router.get('/getById/:id', serviceController.getServiceById);
+router.put('/update/:id', serviceController.updateService);
+router.delete('/delete/:id', serviceController.deleteService);
+router.post('/addMethods/:serviceId', serviceController.addMethodToService);
+router.delete('/delete/:serviceId/:methodId', serviceController.removeMethodFromService);
+router.get('/getMethodByService/:serviceId', serviceController.getMethodsByServiceId);
+
 module.exports = router;
+
