@@ -42,8 +42,7 @@ const pushNotificationRoute = require('./routes/pushNotificationRoute');
 const leaveRoute = require('./routes/leaveRoute');
 const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
-const methoodRoute = require('./routes/methodRoute');
-const serviceRoutes = require('./routes/serviceRoutes');
+const methoodRoute = require('./routes/methodRoutes');
 
 
 const path = require('path');
