@@ -67,7 +67,7 @@ app.use(bodyParser.json({ limit: '50mb' })); // To handle large JSON payloads if
 //app.use(bodyParser.json());
 
 // app.use('/api/login', companyLoginRoutes)
-app.use('/api2', roomRoutes);
+app.use('/api/manage-rooms', roomRoutes);
 app.use('/api2', serviceRoutes);
 app.use('/api2', materialRoutes);
 app.use('/api2/itemCleans', itemCleanRoutes);
