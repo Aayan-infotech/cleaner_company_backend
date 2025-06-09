@@ -84,25 +84,29 @@ exports.getAllGroups = async (req, res, next) => {
 
 exports.getGroupById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const group = await Group.findById(id).populate("clients");
+    const { id: groupId } = req.params;
 
+    const group = await Group.findById(groupId).lean();
     if (!group) {
-      return next(
-        createError(404, `Group not found`)
-      );
+      return next(createError(404, 'Group not found.'));
     }
+    const gc = await GroupClients.findOne({ groupName: groupId })
+      .populate({
+        path: 'clients',
+        select: '-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress'
+      })
+      .lean();
 
-    return next(
-      createSuccess(
-        200,
-        "Group fetched successfully",
-        group
-      )
-    );
+    group.clients = gc ? gc.clients : [];
+
+    return next(createSuccess(
+      200,
+      'Group fetched successfully',
+      group
+    ));
   } catch (err) {
-    console.error("getGroupById error:", err);
-    return next(createError(500, "Internal Server Error"));
+    console.error('getGroupById error:', err);
+    return next(createError(500, 'Internal Server Error'));
   }
 };
 
