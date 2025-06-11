@@ -43,6 +43,7 @@ const leaveRoute = require('./routes/leaveRoute');
 const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
 const methoodRoute = require('./routes/methodRoutes');
+const categoryRoute = require('./routes/categoryRoutes');
 
 
 const path = require('path');
@@ -117,6 +118,7 @@ app.use('/api/manage-crm', crmRoutes);
 app.use('/api/group', groupRoutes);
 app.use('/api/methods', methoodRoute);
 app.use('/api/services', serviceRoutes);
+app.use('/api/categories', categoryRoute);
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test
