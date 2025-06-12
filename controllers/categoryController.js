@@ -26,6 +26,7 @@ exports.getAllCategories = async (req, res, next) => {
 
     const categories = await Category
       .find()
+      .sort({ createdAt: -1 }) 
       .skip(skip)
       .limit(limit)
       .lean();
@@ -36,15 +37,27 @@ exports.getAllCategories = async (req, res, next) => {
       totalCategories,
       totalPages: Math.ceil(totalCategories / limit),
     };
+
     res.status(200).json({
-      success:    true,          
+      success: true,
       data: categories,
-      pagination,       
+      pagination,
     });
   } catch (error) {
     next(createError(500, "Something went wrong"));
   }
 };
+
+
+exports.getAllCategories2 = async (req, res, next) => {
+  try {
+    const categories = await Category.find().sort({ createdAt: -1 }); 
+    return next(createSuccess(200, 'Categories fetched successfully', categories));
+  } catch (error) {
+    return next(createError(500, "Something went wrong"));
+  }
+};
+
 
 
 exports.deleteCategory = async (req, res, next) => {
