@@ -65,6 +65,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(bodyParser.json({ limit: '50mb' })); // To handle large JSON payloads if needed
+app.use('/savedTemplates', express.static(path.join(process.cwd(), 'savedTemplates')));
 
 //app.use(bodyParser.json());
 
