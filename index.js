@@ -43,6 +43,9 @@ const leaveRoute = require('./routes/leaveRoute');
 const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
 const methoodRoute = require('./routes/methodRoutes');
+const categoryRoute = require('./routes/categoryRoutes');
+const templateRoutes = require('./routes/templateRoutes');
+const templateRoute2 = require('./routes/templateRoute2');
 
 
 const path = require('path');
@@ -63,11 +66,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(bodyParser.json({ limit: '50mb' })); // To handle large JSON payloads if needed
+app.use('/savedTemplates', express.static(path.join(process.cwd(), 'savedTemplates')));
 
 //app.use(bodyParser.json());
 
 // app.use('/api/login', companyLoginRoutes)
-app.use('/api2', roomRoutes);
+app.use('/api/manage-rooms', roomRoutes);
 app.use('/api2', serviceRoutes);
 app.use('/api2', materialRoutes);
 app.use('/api2/itemCleans', itemCleanRoutes);
@@ -117,6 +121,9 @@ app.use('/api/manage-crm', crmRoutes);
 app.use('/api/group', groupRoutes);
 app.use('/api/methods', methoodRoute);
 app.use('/api/services', serviceRoutes);
+app.use('/api/categories', categoryRoute);
+app.use('/api/template',express.text({ type: '*/*', limit: '10mb' }), templateRoutes);
+app.use('/api/template2', templateRoute2);
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test

@@ -1,5 +1,3 @@
-// controllers/estimateController.js
-
 const mongoose = require("mongoose");
 const MethodToService = require("../models/methodToService");
 const Service = require("../models/Service");
@@ -35,16 +33,8 @@ exports.createEstimate = async (req, res, next) => {
       );
     }
 
-   
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
-      return next(createError(400, `Invalid room: ${roomId}`));
-    }
-
- 
-
-    const roomDoc = await Room.findById(roomId).lean();
-    if (!roomDoc) {
-      return next(createError(404, `Room not found for ID: ${roomId}`));
+      return next(createError(400, `Invalid room ID: ${roomId}`));
     }
 
     const length = Number(rawLength);
@@ -58,43 +48,48 @@ exports.createEstimate = async (req, res, next) => {
 
     const totalSquarefeet = length * width;
 
+    const roomDoc = await Room.findById(roomId).lean();
+    if (!roomDoc) {
+      return next(createError(404, `Room not found for ID: ${roomId}`));
+    }
+
     let sumCostPerSqFt = 0;
     const selectedServicesDocs = [];
 
     for (let i = 0; i < selectedServices.length; i++) {
-      const entry = selectedServices[i];
-      const { serviceId, methodId } = entry;
+      const { serviceId, methodId } = selectedServices[i];
 
       if (!serviceId || !methodId) {
         return next(
           createError(400, `Entry #${i} is missing serviceId or methodId.`)
         );
       }
-      if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-        return next(
-          createError(400, `Invalid serviceId at entry #${i}: ${serviceId}`)
-        );
-      }
-      if (!mongoose.Types.ObjectId.isValid(methodId)) {
-        return next(
-          createError(400, `Invalid methodId at entry #${i}: ${methodId}`)
-        );
-      }
-      const mtsDoc = await MethodToService.findOne({
-        service: serviceId,
-      }).lean();
-      if (!mtsDoc) {
+
+      if (
+        !mongoose.Types.ObjectId.isValid(serviceId) ||
+        !mongoose.Types.ObjectId.isValid(methodId)
+      ) {
         return next(
           createError(
-            404,
-            `No MethodToService entry found for service ID: ${serviceId} (entry #${i}).`
+            400,
+            `Invalid ObjectId in entry #${i} (serviceId or methodId)`
           )
         );
       }
 
-      const methodData = mtsDoc.methods.find(
-        (m) => m.method.toString() === methodId
-      );
+      const mtsDoc = await MethodToService.findOne({ service: serviceId }).lean();
+      if (!mtsDoc) {
+        return next(
+          createError(404, `No MethodToService found for serviceId at entry #${i}.`)
+        );
+      }
+
+      const methodData = mtsDoc.methods.find((m) => {
+        const methodObj = m.method;
+        const methodIdStr = typeof methodObj === 'object' ? methodObj._id?.toString() : methodObj?.toString();
+        return methodIdStr === methodId;
+      });
+
       if (!methodData) {
         return next(
           createError(
@@ -104,36 +99,49 @@ exports.createEstimate = async (req, res, next) => {
         );
       }
 
-      const serviceDoc = await Service.findById(serviceId).lean();
-      if (!serviceDoc) {
-        return next(
-          createError(
-            404,
-            `Service not found for ID: ${serviceId} (entry #${i}).`
-          )
-        );
+      let methodPrice;
+      let methodDoc;
+
+      if (typeof methodData.method === 'object' && methodData.method.price !== undefined) {
+        methodPrice = Number(methodData.method.price);
+        methodDoc = methodData.method;
+      } else {
+        methodDoc = await Method.findById(methodId).lean();
+        if (!methodDoc) {
+          return next(
+            createError(404, `Method not found for ID ${methodId} (entry #${i}).`)
+          );
+        }
+        methodPrice = Number(methodDoc.price);
       }
-      if (serviceDoc.price == null) {
+
+      if (isNaN(methodPrice) || methodPrice <= 0) {
         return next(
           createError(
             400,
-            `Service (ID: ${serviceId}) is missing a price field.`
+            `Invalid price for method ID ${methodId} (entry #${i}).`
           )
         );
       }
 
-      // 7.e. Fetch Method document (to get method name)
-      const methodDoc = await Method.findById(methodId).lean();
-      if (!methodDoc) {
+      const serviceDoc = await Service.findById(serviceId).lean();
+      if (!serviceDoc || typeof serviceDoc.price !== "number") {
         return next(
           createError(
-            404,
-            `Method not found for ID: ${methodId} (entry #${i}).`
+            400,
+            `Invalid or missing price for service ID ${serviceId} (entry #${i}).`
           )
         );
       }
 
-      const costPerSqFt = serviceDoc.price * methodData.price;
+      const costPerSqFt = Number(serviceDoc.price) * methodPrice;
+
+      if (isNaN(costPerSqFt)) {
+        return next(
+          createError(400, `Calculated costPerSqFt is NaN at entry #${i}.`)
+        );
+      }
+
       sumCostPerSqFt += costPerSqFt;
 
       selectedServicesDocs.push({
@@ -145,13 +153,16 @@ exports.createEstimate = async (req, res, next) => {
         method: {
           _id: methodDoc._id,
           name: methodDoc.name,
-          price: methodData.price,
+          price: methodPrice,
         },
         estimatedCost: costPerSqFt,
       });
     }
 
-    const totalEstimate = sumCostPerSqFt * totalSquarefeet;
+    const totalEstimate = Number(sumCostPerSqFt) * Number(totalSquarefeet);
+    if (isNaN(totalEstimate)) {
+      return next(createError(400, "`totalEstimate` calculated as NaN."));
+    }
 
     const newEstimate = await Estimate.create({
       jobId,
@@ -162,6 +173,7 @@ exports.createEstimate = async (req, res, next) => {
       selectedServices: selectedServicesDocs,
       totalEstimate,
     });
+
     return next(
       createSuccess(200, "Estimate created successfully", newEstimate)
     );
@@ -174,13 +186,9 @@ exports.createEstimate = async (req, res, next) => {
         err.message.includes("missing") ||
         err.message.includes("not found"))
     ) {
-      if (err.message.includes("not found")) {
-        return next(createError(404, err.message));
-      }
-      return next(createError(400, err.message));
+      return next(createError(err.message.includes("not found") ? 404 : 400, err.message));
     }
 
-    // Otherwise, generic 500
     return next(createError(500, "Internal Server Error"));
   }
 };

@@ -1,5 +1,6 @@
 
 const Group = require("../models/groupModel");
+const GroupClients = require("../models/groupClientsModel");
 const createError   = require("../middleware/error");
 const createSuccess = require("../middleware/success");
 
@@ -30,28 +31,47 @@ exports.getAllGroups = async (req, res, next) => {
     limit = Math.max(parseInt(limit, 10), 1);
     const skip = (page - 1) * limit;
 
-    const totalGroups = await Group.countDocuments();
-    const groups = await Group
-      .find()
-      .populate("clients")
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });     
+    const [ totalGroups, groups ] = await Promise.all([
+      Group.countDocuments(),
+      Group.find()
+           .sort({ createdAt: -1 })
+           .skip(skip)
+           .limit(limit)
+           .lean()
+    ]);
+
+    const groupIds = groups.map(g => g._id);
+    const gcs = await GroupClients.find({ groupName: { $in: groupIds } })
+      .populate({
+        path: 'clients',
+        select: '-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress'
+      })
+      .lean();
+
+    const clientMap = gcs.reduce((map, gc) => {
+      map[gc.groupName.toString()] = gc.clients;
+      return map;
+    }, {});
+
+    const data = groups.map(g => ({
+      ...g,
+      clients: clientMap[g._id.toString()] || []
+    }));
 
     const totalPages = Math.ceil(totalGroups / limit);
-    return next(createSuccess(
-      200,
-      "Groups fetched successfully",
-      {
-        groups,
-        pagination: {
-          totalGroups,
-          totalPages,
-          page,
-          limit,
-        }
+
+    return res.status(200).json({
+      success:    true,
+      status:     200,
+      message:    "Groups fetched successfully",
+      data,
+      pagination: {
+        totalGroups,
+        totalPages,
+        page,
+        limit
       }
-    ));
+    });
   } catch (err) {
     console.error("getAllGroups error:", err);
     return next(createError(500, "Failed to fetch groups"));
@@ -59,27 +79,34 @@ exports.getAllGroups = async (req, res, next) => {
 };
 
 
+
+
+
 exports.getGroupById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const group = await Group.findById(id).populate("clients");
+    const { id: groupId } = req.params;
 
+    const group = await Group.findById(groupId).lean();
     if (!group) {
-      return next(
-        createError(404, `Group not found`)
-      );
+      return next(createError(404, 'Group not found.'));
     }
+    const gc = await GroupClients.findOne({ groupName: groupId })
+      .populate({
+        path: 'clients',
+        select: '-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress'
+      })
+      .lean();
 
-    return next(
-      createSuccess(
-        200,
-        "Group fetched successfully",
-        group
-      )
-    );
+    group.clients = gc ? gc.clients : [];
+
+    return next(createSuccess(
+      200,
+      'Group fetched successfully',
+      group
+    ));
   } catch (err) {
-    console.error("getGroupById error:", err);
-    return next(createError(500, "Internal Server Error"));
+    console.error('getGroupById error:', err);
+    return next(createError(500, 'Internal Server Error'));
   }
 };
 
@@ -111,22 +138,27 @@ exports.updateGroupName = async (req, res, next) => {
 
 exports.addClients = async (req, res, next) => {
   try {
-    const { clients } = req.body;
-    const { id } = req.params;
+    const { clients } = req.body;          
+    const { id: groupId } = req.params;  
 
-    const group = await Group.findById(id);
+    const group = await Group.findById(groupId);
     if (!group) {
-      return next(createError(404, `Group  not found.`));
+      return next(createError(404, `Group not found.`));
     }
 
-    clients.forEach(cid => {
-      if (!group.clients.includes(cid)) {
-        group.clients.push(cid);
+    let gc = await GroupClients.findOne({ groupName: groupId });
+    if (!gc) {
+      gc = await GroupClients.create({ groupName: groupId, clients: [] });
+    }
+
+    clients.forEach(clientId => {
+      if (!gc.clients.map(c => c.toString()).includes(clientId)) {
+        gc.clients.push(clientId);
       }
     });
-    await group.save();
+    await gc.save();
 
-    await group.populate({
+    await gc.populate({
       path: "clients",
       select: "-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress"
     });
@@ -134,7 +166,7 @@ exports.addClients = async (req, res, next) => {
     return next(createSuccess(
       200,
       "Clients added successfully",
-      group
+      gc
     ));
   } catch (err) {
     console.error("addClients error:", err);
@@ -145,32 +177,31 @@ exports.addClients = async (req, res, next) => {
 
 exports.removeClient = async (req, res, next) => {
   try {
-    const { id, clientId } = req.params;
+    const { id: groupId, clientId } = req.params;
 
-    const group = await Group.findById(id);
-    if (!group) {
-      return next(createError(404, `Group not found.`));
+    const gc = await GroupClients.findOne({ groupName: groupId });
+    if (!gc) {
+      return next(createError(404, `GroupClients record not found for group "${groupId}".`));
     }
-
-    if (!group.clients.map(c => c.toString()).includes(clientId)) {
+    if (!gc.clients.map(c => c.toString()).includes(clientId)) {
       return next(createError(
         404,
-        `Client with id "${clientId}" is not in group "${id}".`
+        `Client with id "${clientId}" is not in group "${groupId}".`
       ));
     }
 
-    group.clients = group.clients.filter(c => c.toString() !== clientId);
-    await group.save();
+    gc.clients = gc.clients.filter(c => c.toString() !== clientId);
+    await gc.save();
 
-    await group.populate({
+    await gc.populate({
       path: "clients",
       select: "-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress"
     });
 
     return next(createSuccess(
       200,
-      `Client removed successfully`,
-      group
+      "Client removed successfully",
+      gc
     ));
   } catch (err) {
     console.error("removeClient error:", err);
@@ -198,6 +229,56 @@ exports.deleteGroup = async (req, res, next) => {
     return next(createError(500, "Internal Server Error"));
   }
 };
+
+exports.getGroupClients = async (req, res, next) => {
+  try {
+    const { id: groupId } = req.params;
+
+    const page  = Math.max(parseInt(req.query.page,  10) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit, 10) || 10,1);
+    const skip  = (page - 1) * limit;
+
+    const gc = await GroupClients.findOne({ groupName: groupId }).lean();
+    if (!gc) {
+      return next(createError(404, `GroupClients not found for group "${groupId}".`));
+    }
+
+    const totalClients = Array.isArray(gc.clients) ? gc.clients.length : 0;
+    const totalPages   = Math.ceil(totalClients / limit);
+
+    const paged = await GroupClients.findOne({ groupName: groupId })
+      .populate({
+        path: 'clients',
+        select: '-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress',
+        options: { skip, limit, sort: { createdAt: -1 } }
+      })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      status:  200,
+      message: "Group clients fetched successfully",
+      data: {
+        groupName: gc.groupName,
+        _id:       gc._id,
+        createdAt: gc.createdAt,
+        updatedAt: gc.updatedAt,
+        clients:   paged.clients || []
+      },
+      pagination: {
+        totalClients,
+        totalPages,
+        page,
+        limit
+      }
+    });
+  } catch (err) {
+    console.error("getGroupClients error:", err);
+    return next(createError(500, "Internal Server Error"));
+  }
+};
+
+
 
 
 

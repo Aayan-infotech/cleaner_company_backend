@@ -8,7 +8,8 @@ router.get("/getAll", group.getAllGroups);
 router.get("/getById/:id", group.getGroupById);
 router.put("/update/:id", group.updateGroupName);
 router.delete("/delete/:id", group.deleteGroup);
-router.put("/addClients/:id", group.addClients);
+router.post("/addClients/:id", group.addClients);
 router.delete("/delete/:id/:clientId", group.removeClient);
+router.get("/getClients/:id", group.getGroupClients);
 
 module.exports = router;
