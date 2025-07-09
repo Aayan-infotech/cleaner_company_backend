@@ -123,7 +123,7 @@ app.use('/api/methods', methoodRoute);
 app.use('/api/services', serviceRoutes);
 app.use('/api/categories', categoryRoute);
 app.use('/api/template',express.text({ type: '*/*', limit: '10mb' }), templateRoutes);
-app.use('/api/template2', templateRoute2);
+app.use('/api/template2', templateRoute2); // New template added
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test
