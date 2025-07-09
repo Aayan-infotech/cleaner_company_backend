@@ -44,8 +44,8 @@ const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
 const methoodRoute = require('./routes/methodRoutes');
 const categoryRoute = require('./routes/categoryRoutes');
-const templateRoutes = require('./routes/templateRoutes
-const templateRoute2 = require('./routes/templateRoute2
+const templateRoutes = require('./routes/templateRoutes')
+const templateRoute2 = require('./routes/templateRoute2')
 
 
 const path = require('path');
