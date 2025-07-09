@@ -44,8 +44,8 @@ const crmRoutes = require('./routes/crmRoute');
 const groupRoutes = require('./routes/groupRoutes');
 const methoodRoute = require('./routes/methodRoutes');
 const categoryRoute = require('./routes/categoryRoutes');
-const templateRoutes = require('./routes/templateRoutes
-const templateRoute2 = require('./routes/templateRoute2
+const templateRoutes = require('./routes/templateRoutes')
+const templateRoute2 = require('./routes/templateRoute2')
 
 
 const path = require('path');
@@ -123,7 +123,7 @@ app.use('/api/methods', methoodRoute);
 app.use('/api/services', serviceRoutes);
 app.use('/api/categories', categoryRoute);
 app.use('/api/template',express.text({ type: '*/*', limit: '10mb' }), templateRoutes);
-app.use('/api/template2', templateRoute2);
+app.use('/api/template2', templateRoute2); // New template added
 
 //app.use(express.static(path.join(__dirname, 'public')));
 //test
