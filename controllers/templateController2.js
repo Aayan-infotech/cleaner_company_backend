@@ -3,17 +3,6 @@ const Category = require('../models/categoryModel');
 const createError = require("../middleware/error");
 const createSuccess = require("../middleware/success");
 
-// exports.createTemplate = async (req, res, next) => {
-//   try {
-//     const template = new Template2(req.body);
-//     await template.save();
-//     return next(createSuccess(201, "Template created", template));
-
-//   } catch (error) {
-//     console.error("Error Create Template", error);
-//     return next(createError(500, "Internal Server Error"));
-//   }
-// };
 
 exports.createTemplate = async (req, res, next) => {
   try {
@@ -40,7 +29,6 @@ exports.createTemplate = async (req, res, next) => {
   }
 };
 
-
 exports.getAllTemplates = async (req, res, next) => {
   try {
     const templates = await Template2.find().populate('categoryId');
@@ -53,12 +41,17 @@ exports.getAllTemplates = async (req, res, next) => {
 
 exports.getTemplateById = async (req, res, next) => {
   try {
-    const template = await Template2.findById(req.params.id).populate('categoryId');
-    if (!template) {
-        return next(createError(404, "Not Found" ));
-    };
+    const { id } = req.params;
+    if (!id) {
+      return next(createError(400, "Template ID is required"));
+    }
 
-    return next(createSuccess(200, "Get template", template ));
+    const templateExists = await Template2.findById(id);
+    if (!templateExists) {
+      return next(createError(404, "Template not found"));
+    }
+    return next(createSuccess(200, "Template found", templateExists));
+
   } catch (error) {
     console.error("Error Get Template", error);
     return next(createError(500, "Internal Server Error"));
@@ -79,15 +72,22 @@ exports.updateTemplate = async (req, res, next) => {
   }
 };
 
-exports.deleteTemplate = async (req, res) => {
+exports.deleteTemplate = async (req, res, next) => {
   try {
-    const template = await Template2.findByIdAndDelete(req.params.id);
-    if (!template) {
-        return next(createError(404, 'Not found' ));
+    const { id } = req.params;
+
+    if (!id) {
+      return next(createError(400, 'Template ID is required'));
     }
-    return next(createSuccess(200, "Deleted successfully" ));
+
+    const templateExists = await Template2.findByIdAndDelete(id);
+    if (!templateExists) {
+      return next(createError(404, 'Template not found'));
+    }
+    
+    return next(createSuccess(200, 'Template deleted successfully'));
   } catch (error) {
-    console.error("Error Delete Template", error);
-    return next(createError(500, "Internal Server Error"));
+    console.error('Error deleting template:', error);
+    return next(createError(500, 'Internal Server Error'));
   }
 };
