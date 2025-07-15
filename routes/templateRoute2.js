@@ -7,5 +7,9 @@ router.get('/', templateController.getAllTemplates);
 router.get('/:id', templateController.getTemplateById);
 router.put('/:id', templateController.updateTemplate);
 router.delete('/:id', templateController.deleteTemplate);
+router.post('/:templateId/share-to-clients', templateController.shareTemplateToClients);
+router.post('/:templateId/share-to-groups', templateController.shareTemplateToGroups);
+
+
 
 module.exports = router;
