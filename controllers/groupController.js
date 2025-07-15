@@ -78,10 +78,6 @@ exports.getAllGroups = async (req, res, next) => {
   }
 };
 
-
-
-
-
 exports.getGroupById = async (req, res, next) => {
   try {
     const { id: groupId } = req.params;
