@@ -1,31 +1,60 @@
-const Template2 = require('../models/templateModel2');
-const Category = require('../models/categoryModel');
+const Template2 = require("../models/templateModel2");
+const Category = require("../models/categoryModel");
 const createError = require("../middleware/error");
 const createSuccess = require("../middleware/success");
 const CRM = require("../models/crmModel");
 const GroupClients = require("../models/groupClientsModel");
 const nodemailer = require("nodemailer");
-
+const path = require("path");
+const fs = require("fs");
 
 exports.createTemplate = async (req, res, next) => {
   try {
-    const { logo, titleHtml, descHtml, fontFamily, fontSize, fontColor, fontWeight, fontStyle, backgroundColor, textColor } = req.body;
-
-    const template = new Template2({
-      logo,
+    const {
       titleHtml,
       descHtml,
-      fontFamily,
-      fontSize,
-      fontColor,
-      fontWeight,
-      fontStyle,
+      titleFontFamily,
+      titleFontSize,
+      titleFontColor,
+      titleisBold,
+      titleisItalic,
+      desFontColor,
       backgroundColor,
-      textColor,
+      categoryId,
+    } = req.body;
+
+    let logos = [];
+
+    // Handle uploaded logos
+    if (req.files && req.files.length > 0) {
+      logos = req.files.map((file) => {
+        const filename = Date.now() + "-" + file.originalname;
+        const filepath = path.join(__dirname, "../uploads", filename);
+        fs.writeFileSync(filepath, file.buffer); // Save the file to disk
+
+        return {
+          filename,
+          contentType: file.mimetype,
+        };
+      });
+    }
+
+    const newTemplate = new Template2({
+      logo: logos,
+      titleHtml,
+      descHtml,
+      titleFontFamily,
+      titleFontSize,
+      titleFontColor,
+      titleisBold,
+      titleisItalic,
+      desFontColor,
+      backgroundColor,
+      ...(categoryId && categoryId !== "" && { categoryId }),
     });
 
-    await template.save();
-    return next(createSuccess(201, "Template created", template));
+    await newTemplate.save();
+    return next(createSuccess(201, "Template created", newTemplate));
   } catch (error) {
     console.error("Error Create Template", error);
     return next(createError(500, "Internal Server Error"));
@@ -34,8 +63,28 @@ exports.createTemplate = async (req, res, next) => {
 
 exports.getAllTemplates = async (req, res, next) => {
   try {
-    const templates = await Template2.find().populate('categoryId');
-    return next(createSuccess(200, "Get all Templates", templates ));
+    const templates = await Template2.find()
+      .populate("categoryId")
+      .sort({ createdAt: -1 });
+
+    const templatesWithLogoURLs = templates.map((template) => {
+      const logosWithURLs = (template.logo || []).map((image) => ({
+        ...image._doc,
+        url: `${req.protocol}://${req.get("host")}/uploads/${image.filename}`,
+      }));
+
+      return {
+        ...template._doc,
+        logo: logosWithURLs,
+      };
+    });
+
+    return next(
+      createSuccess(200, "All templates fetched successfully", {
+        totalCount: templates.length,
+        templates: templatesWithLogoURLs,
+      })
+    );
   } catch (error) {
     console.error("Error Get Templates", error);
     return next(createError(500, "Internal Server Error"));
@@ -45,16 +94,28 @@ exports.getAllTemplates = async (req, res, next) => {
 exports.getTemplateById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
     if (!id) {
       return next(createError(400, "Template ID is required"));
     }
 
-    const templateExists = await Template2.findById(id);
-    if (!templateExists) {
+    const template = await Template2.findById(id);
+    if (!template) {
       return next(createError(404, "Template not found"));
     }
-    return next(createSuccess(200, "Template found", templateExists));
 
+    // Generate URLs for logo images
+    const logosWithURLs = (template.logo || []).map((image) => ({
+      ...image._doc,
+      url: `${req.protocol}://${req.get("host")}/uploads/${image.filename}`,
+    }));
+
+    return next(
+      createSuccess(200, "Template fetched successfully", {
+        ...template._doc,
+        logo: logosWithURLs,
+      })
+    );
   } catch (error) {
     console.error("Error Get Template", error);
     return next(createError(500, "Internal Server Error"));
@@ -63,12 +124,57 @@ exports.getTemplateById = async (req, res, next) => {
 
 exports.updateTemplate = async (req, res, next) => {
   try {
-    const template = await Template2.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!template) { 
-        return next(createError(404, 'Not found' ));
+    const { id } = req.params;
+
+    const {
+      titleHtml,
+      descHtml,
+      titleFontFamily,
+      titleFontSize,
+      titleFontColor,
+      titleisBold,
+      titleisItalic,
+      desFontColor,
+      backgroundColor,
+      categoryId,
+    } = req.body;
+
+    const template = await Template2.findById(id);
+    if (!template) {
+      return next(createError(404, "Template not found"));
     }
-    
-    return next(createSuccess(200, "Update template successfully", template ));
+
+    // ✅ Update fields conditionally
+    if (titleHtml) template.titleHtml = titleHtml;
+    if (descHtml) template.descHtml = descHtml;
+    if (titleFontFamily) template.titleFontFamily = titleFontFamily;
+    if (titleFontSize) template.titleFontSize = Number(titleFontSize);
+    if (titleFontColor) template.titleFontColor = titleFontColor;
+    if (desFontColor) template.desFontColor = desFontColor;
+    if (backgroundColor) template.backgroundColor = backgroundColor;
+    if (categoryId && categoryId !== "") template.categoryId = categoryId;
+    template.titleisBold = titleisBold === "true" || titleisBold === true;
+    template.titleisItalic = titleisItalic === "true" || titleisItalic === true;
+
+    // ✅ Handle logo re-upload
+    if (req.files && req.files.length > 0) {
+      const logos = req.files.map((file) => {
+        const filename = Date.now() + "-" + file.originalname;
+        const filepath = path.join(__dirname, "../uploads", filename);
+        fs.writeFileSync(filepath, file.buffer);
+
+        return {
+          filename,
+          contentType: file.mimetype,
+        };
+      });
+
+      template.logo = logos; // Replace existing logos
+    }
+
+    await template.save();
+
+    return next(createSuccess(200, "Template updated successfully", template));
   } catch (error) {
     console.error("Error Update Template", error);
     return next(createError(500, "Internal Server Error"));
@@ -80,77 +186,135 @@ exports.deleteTemplate = async (req, res, next) => {
     const { id } = req.params;
 
     if (!id) {
-      return next(createError(400, 'Template ID is required'));
+      return next(createError(400, "Template ID is required"));
     }
 
     const templateExists = await Template2.findByIdAndDelete(id);
     if (!templateExists) {
-      return next(createError(404, 'Template not found'));
+      return next(createError(404, "Template not found"));
     }
-    
-    return next(createSuccess(200, 'Template deleted successfully'));
+
+    return next(createSuccess(200, "Template deleted successfully"));
   } catch (error) {
-    console.error('Error deleting template:', error);
-    return next(createError(500, 'Internal Server Error'));
+    console.error("Error deleting template:", error);
+    return next(createError(500, "Internal Server Error"));
   }
 };
 
 // Share template to clients
 exports.shareTemplateToClients = async (req, res) => {
   const { templateId } = req.params;
-  const { clientIds } = req.body; 
+  const { clientIds } = req.body;
 
   try {
     const template = await Template2.findById(templateId);
     if (!template) {
-      return res.status(404).json({ message: 'Template not found' });
+      return res.status(404).json({ message: "Template not found" });
     }
 
     const clients = await CRM.find({ _id: { $in: clientIds } });
 
     if (clients.length === 0) {
-      return res.status(404).json({ message: 'No valid clients found' });
+      return res.status(404).json({ message: "No valid clients found" });
     }
 
+    const logoUrl = template.logo?.[0]?.filename
+      ? `http://52.20.55.193:5966/uploads/${template.logo[0].filename}`
+      : null;
+
+
     const htmlContent = `
-      <div style="
-        background-color: ${template.backgroundColor || '#ffffff'};
-        color: ${template.textColor || '#000000'};
-        font-size: ${template.fontSize || 16}px;
-        font-weight: ${template.isBold ? 'bold' : 'normal'};
-        font-style: ${template.isItalic ? 'italic' : 'normal'};
-        padding: 20px;
-      ">
-        ${template.logo ? `<img src="${template.logo}" alt="Logo" style="max-width: 200px;" />` : ''}
-        <h2 style="color: ${template.fontColor || '#000'}">${template.titleHtml || ''}</h2>
-        <p>${template.descHtml || ''}</p>
-      </div>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Template Email</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: ${template.backgroundColor || "#8000b0"};
+            font-family: ${template.titleFontFamily || "Arial, sans-serif"};
+          }
+          .container {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            background-color: ${template.backgroundColor || "#8000b0"};
+            padding: 20px;
+          }
+          .logo {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .logo img {
+            max-width: 200px;
+            border: 2px solid white;
+            display: block;
+            margin: 0 auto;
+          }
+          .title {
+            background-color: #ffffff;
+            color: ${template.titleFontColor || "#000000"};
+            font-family: ${template.titleFontFamily };
+            font-weight: ${template.titleisBold ? "bold" : "normal"};
+            font-style: ${template.titleisItalic ? "italic" : "normal"};
+            font-size: ${template.titleFontSize || 20}px;
+            text-align: center;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+          }
+          .description {
+            background-color: #ffffff;
+            color: ${template.desFontColor || "#333333"};
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+            min-height: 200px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          ${
+            logoUrl
+              ? `<div class="logo"><img src="${logoUrl}" alt="Logo" /></div>`
+              : ""
+          }
+          <div class="title">${template.titleHtml || ""}</div>
+          <div class="description">${template.descHtml || ""}</div>
+        </div>
+      </body>
+      </html>
     `;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
-        user: 'gpt11032024@gmail.com',
-        pass: 'vrsypqwmiganvevf'
-      }
+        user: "gpt11032024@gmail.com",
+        pass: "vrsypqwmiganvevf",
+      },
     });
 
     // Send email to each client
     for (const client of clients) {
       const mailOptions = {
-        from: 'gpt11032024@gmail.com',
+        from: "gpt11032024@gmail.com",
         to: client.email,
-        subject: 'Here’s a new template for you',
-        html: htmlContent
+        subject: "Here’s a new template for you",
+        html: htmlContent,
       };
 
       await transporter.sendMail(mailOptions);
     }
 
-    return res.json({ message: 'Template shared with all clients successfully' });
+    return res.json({
+      message: "Template shared with all clients successfully",
+    });
   } catch (error) {
-    console.error('Error sharing template:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Error sharing template:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -160,68 +324,85 @@ exports.shareTemplateToGroups = async (req, res) => {
   const { groupIds = [] } = req.body;
 
   if (!templateId || !Array.isArray(groupIds) || groupIds.length === 0) {
-    return res.status(400).json({ message: 'templateId and groupIds[] are required' });
+    return res
+      .status(400)
+      .json({ message: "templateId and groupIds[] are required" });
   }
 
   try {
     const template = await Template2.findById(templateId);
-    if (!template) return res.status(404).json({ message: 'Template not found' });
+    if (!template)
+      return res.status(404).json({ message: "Template not found" });
 
     // Get all clients from the selected groups
-    const groupClientDocs = await GroupClients.find({ groupName: { $in: groupIds } })
+    const groupClientDocs = await GroupClients.find({
+      groupName: { $in: groupIds },
+    })
       .populate({
-        path: 'clients',
-        select: 'email name'
+        path: "clients",
+        select: "email name",
       })
       .lean();
 
-    const allClients = groupClientDocs.flatMap(gc => gc.clients || []);
-    const uniqueClients = Array.from(new Map(allClients.map(c => [c._id.toString(), c])).values());
+    const allClients = groupClientDocs.flatMap((gc) => gc.clients || []);
+    const uniqueClients = Array.from(
+      new Map(allClients.map((c) => [c._id.toString(), c])).values()
+    );
 
     if (uniqueClients.length === 0) {
-      return res.status(404).json({ message: 'No clients found in selected groups' });
+      return res
+        .status(404)
+        .json({ message: "No clients found in selected groups" });
     }
 
     // Prepare the email content
     const htmlContent = `
       <div style="
-        background-color: ${template.backgroundColor || '#ffffff'};
-        color: ${template.textColor || '#000000'};
+        background-color: ${template.backgroundColor || "#ffffff"};
+        color: ${template.textColor || "#000000"};
         font-size: ${template.fontSize || 16}px;
-        font-weight: ${template.isBold ? 'bold' : 'normal'};
-        font-style: ${template.isItalic ? 'italic' : 'normal'};
+        font-weight: ${template.isBold ? "bold" : "normal"};
+        font-style: ${template.isItalic ? "italic" : "normal"};
         padding: 20px;
       ">
-        ${template.logo ? `<img src="${template.logo}" alt="Logo" style="max-width: 200px;" />` : ''}
-        <h2 style="color: ${template.fontColor || '#000'}">${template.titleHtml || ''}</h2>
-        <p>${template.descHtml || ''}</p>
+        ${
+          template.logo
+            ? `<img src="${template.logo}" alt="Logo" style="max-width: 200px;" />`
+            : ""
+        }
+        <h2 style="color: ${template.fontColor || "#000"}">${
+      template.titleHtml || ""
+    }</h2>
+        <p>${template.descHtml || ""}</p>
       </div>
     `;
 
     // Setup Nodemailer
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
-        user: 'gpt11032024@gmail.com',
-        pass: 'vrsypqwmiganvevf'
-      }
+        user: "gpt11032024@gmail.com",
+        pass: "vrsypqwmiganvevf",
+      },
     });
 
-    const sendPromises = uniqueClients.map(client => {
+    const sendPromises = uniqueClients.map((client) => {
       const mailOptions = {
-        from: 'gpt11032024@gmail.com',
+        from: "gpt11032024@gmail.com",
         to: client.email,
-        subject: 'Here’s a new template for you',
-        html: htmlContent
+        subject: "Here’s a new template for you",
+        html: htmlContent,
       };
       return transporter.sendMail(mailOptions);
     });
 
     await Promise.all(sendPromises);
 
-    return res.status(200).json({ message: `Template shared to ${uniqueClients.length} clients.` });
+    return res
+      .status(200)
+      .json({ message: `Template shared to ${uniqueClients.length} clients.` });
   } catch (err) {
-    console.error('Error sharing template to groups:', err);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Error sharing template to groups:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
