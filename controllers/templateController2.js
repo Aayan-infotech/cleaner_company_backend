@@ -219,7 +219,7 @@ exports.shareTemplateToClients = async (req, res) => {
     }
 
     const logoUrl = template.logo?.[0]?.filename
-      ? `http://52.20.55.193:5966/uploads/${template.logo[0].filename}`
+      ? `http://98.82.228.18:5966/uploads/${template.logo[0].filename}`
       : null;
 
 
