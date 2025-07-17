@@ -331,8 +331,9 @@ exports.shareTemplateToGroups = async (req, res) => {
 
   try {
     const template = await Template2.findById(templateId);
-    if (!template)
+    if (!template) {
       return res.status(404).json({ message: "Template not found" });
+    }
 
     // Get all clients from the selected groups
     const groupClientDocs = await GroupClients.find({
@@ -355,30 +356,80 @@ exports.shareTemplateToGroups = async (req, res) => {
         .json({ message: "No clients found in selected groups" });
     }
 
-    // Prepare the email content
+    // Resolve logo URL
+    const logoUrl = template.logo?.[0]?.filename
+      ? `http://98.82.228.18:5966/uploads/${template.logo[0].filename}`
+      : null;
+
+    // Build HTML email content
     const htmlContent = `
-      <div style="
-        background-color: ${template.backgroundColor || "#ffffff"};
-        color: ${template.textColor || "#000000"};
-        font-size: ${template.fontSize || 16}px;
-        font-weight: ${template.isBold ? "bold" : "normal"};
-        font-style: ${template.isItalic ? "italic" : "normal"};
-        padding: 20px;
-      ">
-        ${
-          template.logo
-            ? `<img src="${template.logo}" alt="Logo" style="max-width: 200px;" />`
-            : ""
-        }
-        <h2 style="color: ${template.fontColor || "#000"}">${
-      template.titleHtml || ""
-    }</h2>
-        <p>${template.descHtml || ""}</p>
-      </div>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Template Email</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: ${template.backgroundColor || "#8000b0"};
+            font-family: ${template.titleFontFamily || "Arial, sans-serif"};
+          }
+          .container {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            background-color: ${template.backgroundColor || "#8000b0"};
+            padding: 20px;
+          }
+          .logo {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .logo img {
+            max-width: 200px;
+            border: 2px solid white;
+            display: block;
+            margin: 0 auto;
+          }
+          .title {
+            background-color: #ffffff;
+            color: ${template.titleFontColor || "#000000"};
+            font-family: ${template.titleFontFamily};
+            font-weight: ${template.titleisBold ? "bold" : "normal"};
+            font-style: ${template.titleisItalic ? "italic" : "normal"};
+            font-size: ${template.titleFontSize || 20}px;
+            text-align: center;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+          }
+          .description {
+            background-color: #ffffff;
+            color: ${template.desFontColor || "#333333"};
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+            min-height: 200px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          ${
+            logoUrl
+              ? `<div class="logo"><img src="${logoUrl}" alt="Logo" /></div>`
+              : ""
+          }
+          <div class="title">${template.titleHtml || ""}</div>
+          <div class="description">${template.descHtml || ""}</div>
+        </div>
+      </body>
+      </html>
     `;
 
     // Setup Nodemailer
-    const transporter = nodemailer.createTransport({
+    const transporter = require("nodemailer").createTransport({
       service: "gmail",
       auth: {
         user: "gpt11032024@gmail.com",
@@ -386,21 +437,20 @@ exports.shareTemplateToGroups = async (req, res) => {
       },
     });
 
-    const sendPromises = uniqueClients.map((client) => {
+    // Send emails
+    for (const client of uniqueClients) {
       const mailOptions = {
         from: "gpt11032024@gmail.com",
         to: client.email,
         subject: "Here’s a new template for you",
         html: htmlContent,
       };
-      return transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+    }
+
+    return res.status(200).json({
+      message: `Template shared with ${uniqueClients.length} clients in groups successfully`,
     });
-
-    await Promise.all(sendPromises);
-
-    return res
-      .status(200)
-      .json({ message: `Template shared to ${uniqueClients.length} clients.` });
   } catch (err) {
     console.error("Error sharing template to groups:", err);
     return res.status(500).json({ message: "Server error" });
