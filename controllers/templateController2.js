@@ -270,7 +270,6 @@ exports.shareTemplateToClients = async (req, res) => {
             padding: 20px;
             font-size: 16px;
             line-height: 1.5;
-            text-align: center;
             min-height: 200px;
           }
         </style>
@@ -409,7 +408,6 @@ exports.shareTemplateToGroups = async (req, res) => {
             padding: 20px;
             font-size: 16px;
             line-height: 1.5;
-            text-align: center;
             min-height: 200px;
           }
         </style>
