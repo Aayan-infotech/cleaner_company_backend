@@ -219,7 +219,7 @@ exports.shareTemplateToClients = async (req, res) => {
     }
 
     const logoUrl = template.logo?.[0]?.filename
-      ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
+      ? `http://98.82.228.18:5966/uploads/${template.logo[0].filename}`
       : null;
 
 
@@ -357,7 +357,7 @@ exports.shareTemplateToGroups = async (req, res) => {
 
     // Resolve logo URL
     const logoUrl = template.logo?.[0]?.filename
-      ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
+      ? `http://98.82.228.18:5966/uploads/${template.logo[0].filename}`
       : null;
 
     // Build HTML email content
