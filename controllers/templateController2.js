@@ -202,6 +202,121 @@ exports.deleteTemplate = async (req, res, next) => {
 };
 
 // Share template to clients
+// exports.shareTemplateToClients1 = async (req, res) => {
+//   const { templateId } = req.params;
+//   const { clientIds } = req.body;
+
+//   try {
+//     const template = await Template2.findById(templateId);
+//     if (!template) {
+//       return res.status(404).json({ message: "Template not found" });
+//     }
+
+//     const clients = await CRM.find({ _id: { $in: clientIds } });
+
+//     if (clients.length === 0) {
+//       return res.status(404).json({ message: "No valid clients found" });
+//     }
+
+//     const logoUrl = template.logo?.[0]?.filename
+//       ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
+//       : null;
+
+
+//     const htmlContent = `
+//       <!DOCTYPE html>
+//       <html lang="en">
+//       <head>
+//         <meta charset="UTF-8" />
+//         <title>Template Email</title>
+//         <style>
+//           body {
+//             margin: 0;
+//             padding: 0;
+//             background-color: ${template.backgroundColor || "#8000b0"};
+//             font-family: ${template.titleFontFamily || "Arial, sans-serif"};
+//           }
+//           .container {
+//             width: 100%;
+//             max-width: 500px;
+//             margin: auto;
+//             background-color: ${template.backgroundColor || "#8000b0"};
+//             padding: 20px;
+//           }
+//           .logo {
+//             text-align: center;
+//             margin-bottom: 20px;
+//           }
+//           .logo img {
+//             max-width: 200px;
+//             border: 2px solid white;
+//             display: block;
+//             margin: 0 auto;
+//           }
+//           .title {
+//             background-color: #ffffff;
+//             color: ${template.titleFontColor || "#000000"};
+//             font-family: ${template.titleFontFamily };
+//             font-weight: ${template.titleisBold ? "bold" : "normal"};
+//             font-style: ${template.titleisItalic ? "italic" : "normal"};
+//             font-size: ${template.titleFontSize || 20}px;
+//             text-align: center;
+//             padding: 12px 20px;
+//             margin-bottom: 10px;
+//           }
+//           .description {
+//             background-color: #ffffff;
+//             color: ${template.desFontColor || "#333333"};
+//             padding: 20px;
+//             font-size: 16px;
+//             line-height: 1.5;
+//             min-height: 200px;
+//           }
+//         </style>
+//       </head>
+//       <body>
+//         <div class="container">
+//           ${
+//             logoUrl
+//               ? `<div class="logo"><img src="${logoUrl}" alt="Logo" /></div>`
+//               : ""
+//           }
+//           <div class="title">${template.titleHtml || ""}</div>
+//           <div class="description">${template.descHtml || ""}</div>
+//         </div>
+//       </body>
+//       </html>
+//     `;
+
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: "gpt11032024@gmail.com",
+//         pass: "vrsypqwmiganvevf",
+//       },
+//     });
+
+//     // Send email to each client
+//     for (const client of clients) {
+//       const mailOptions = {
+//         from: "gpt11032024@gmail.com",
+//         to: client.email,
+//         subject: "Here’s a new template for you",
+//         html: htmlContent,
+//       };
+
+//       await transporter.sendMail(mailOptions);
+//     }
+
+//     return res.json({
+//       message: "Template shared with all clients successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error sharing template:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.shareTemplateToClients = async (req, res) => {
   const { templateId } = req.params;
   const { clientIds } = req.body;
@@ -213,7 +328,6 @@ exports.shareTemplateToClients = async (req, res) => {
     }
 
     const clients = await CRM.find({ _id: { $in: clientIds } });
-
     if (clients.length === 0) {
       return res.status(404).json({ message: "No valid clients found" });
     }
@@ -222,57 +336,92 @@ exports.shareTemplateToClients = async (req, res) => {
       ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
       : null;
 
-
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Template Email</title>
-        <style>
+       <style>
           body {
             margin: 0;
             padding: 0;
             background-color: ${template.backgroundColor || "#8000b0"};
             font-family: ${template.titleFontFamily || "Arial, sans-serif"};
           }
+
           .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             margin: auto;
             background-color: ${template.backgroundColor || "#8000b0"};
             padding: 20px;
+            box-sizing: border-box;
           }
+
           .logo {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
           }
+
           .logo img {
-            max-width: 200px;
+            width: 200px;             /* Keep width fixed at 200px */
+            height: 120px;            /* Increase height (default might have been auto) */
+            object-fit: cover;        /* Ensures image fills height */
             border: 2px solid white;
+            border-radius: 8px;
             display: block;
             margin: 0 auto;
           }
+
           .title {
             background-color: #ffffff;
             color: ${template.titleFontColor || "#000000"};
-            font-family: ${template.titleFontFamily };
+            font-family: ${template.titleFontFamily};
             font-weight: ${template.titleisBold ? "bold" : "normal"};
             font-style: ${template.titleisItalic ? "italic" : "normal"};
             font-size: ${template.titleFontSize || 20}px;
             text-align: center;
             padding: 12px 20px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            word-wrap: break-word;
           }
+
           .description {
             background-color: #ffffff;
             color: ${template.desFontColor || "#333333"};
             padding: 20px;
             font-size: 16px;
-            line-height: 1.5;
-            min-height: 200px;
+            line-height: 1.6;
+            min-height: 300px;   /* Increased height only */
+            word-wrap: break-word;
+          }
+
+          @media screen and (max-width: 480px) {
+            .container {
+              padding: 10px;
+            }
+
+            .logo img {
+              width: 150px;        /* Keep width fixed */
+              height: 120px;       /* Increase height for mobile too */
+            }
+
+            .title {
+              font-size: ${Math.floor((template.titleFontSize || 20) * 0.8)}px;
+              padding: 10px;
+            }
+
+            .description {
+              padding: 15px;
+              font-size: 14px;
+              min-height: 250px;   /* Taller description on mobile as well */
+            }
           }
         </style>
+
+
       </head>
       <body>
         <div class="container">
@@ -296,7 +445,6 @@ exports.shareTemplateToClients = async (req, res) => {
       },
     });
 
-    // Send email to each client
     for (const client of clients) {
       const mailOptions = {
         from: "gpt11032024@gmail.com",
@@ -318,6 +466,143 @@ exports.shareTemplateToClients = async (req, res) => {
 };
 
 // Share Template to Groups
+// exports.shareTemplateToGroups1 = async (req, res) => {
+//   const { templateId } = req.params;
+//   const { groupIds = [] } = req.body;
+
+//   if (!templateId || !Array.isArray(groupIds) || groupIds.length === 0) {
+//     return res
+//       .status(400)
+//       .json({ message: "templateId and groupIds[] are required" });
+//   }
+
+//   try {
+//     const template = await Template2.findById(templateId);
+//     if (!template) {
+//       return res.status(404).json({ message: "Template not found" });
+//     }
+
+//     // Get all clients from the selected groups
+//     const groupClientDocs = await GroupClients.find({
+//       groupName: { $in: groupIds },
+//     })
+//       .populate({
+//         path: "clients",
+//         select: "email name",
+//       })
+//       .lean();
+
+//     const allClients = groupClientDocs.flatMap((gc) => gc.clients || []);
+//     const uniqueClients = Array.from(
+//       new Map(allClients.map((c) => [c._id.toString(), c])).values()
+//     );
+
+//     if (uniqueClients.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No clients found in selected groups" });
+//     }
+
+//     // Resolve logo URL
+//     const logoUrl = template.logo?.[0]?.filename
+//       ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
+//       : null;
+
+//     // Build HTML email content
+//     const htmlContent = `
+//       <!DOCTYPE html>
+//       <html lang="en">
+//       <head>
+//         <meta charset="UTF-8" />
+//         <title>Template Email</title>
+//         <style>
+//           body {
+//             margin: 0;
+//             padding: 0;
+//             background-color: ${template.backgroundColor || "#8000b0"};
+//             font-family: ${template.titleFontFamily || "Arial, sans-serif"};
+//           }
+//           .container {
+//             width: 100%;
+//             max-width: 500px;
+//             margin: auto;
+//             background-color: ${template.backgroundColor || "#8000b0"};
+//             padding: 20px;
+//           }
+//           .logo {
+//             text-align: center;
+//             margin-bottom: 20px;
+//           }
+//           .logo img {
+//             max-width: 200px;
+//             border: 2px solid white;
+//             display: block;
+//             margin: 0 auto;
+//           }
+//           .title {
+//             background-color: #ffffff;
+//             color: ${template.titleFontColor || "#000000"};
+//             font-family: ${template.titleFontFamily};
+//             font-weight: ${template.titleisBold ? "bold" : "normal"};
+//             font-style: ${template.titleisItalic ? "italic" : "normal"};
+//             font-size: ${template.titleFontSize || 20}px;
+//             text-align: center;
+//             padding: 12px 20px;
+//             margin-bottom: 10px;
+//           }
+//           .description {
+//             background-color: #ffffff;
+//             color: ${template.desFontColor || "#333333"};
+//             padding: 20px;
+//             font-size: 16px;
+//             line-height: 1.5;
+//             min-height: 200px;
+//           }
+//         </style>
+//       </head>
+//       <body>
+//         <div class="container">
+//           ${
+//             logoUrl
+//               ? `<div class="logo"><img src="${logoUrl}" alt="Logo" /></div>`
+//               : ""
+//           }
+//           <div class="title">${template.titleHtml || ""}</div>
+//           <div class="description">${template.descHtml || ""}</div>
+//         </div>
+//       </body>
+//       </html>
+//     `;
+
+//     // Setup Nodemailer
+//     const transporter = require("nodemailer").createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: "gpt11032024@gmail.com",
+//         pass: "vrsypqwmiganvevf",
+//       },
+//     });
+
+//     // Send emails
+//     for (const client of uniqueClients) {
+//       const mailOptions = {
+//         from: "gpt11032024@gmail.com",
+//         to: client.email,
+//         subject: "Here’s a new template for you",
+//         html: htmlContent,
+//       };
+//       await transporter.sendMail(mailOptions);
+//     }
+
+//     return res.status(200).json({
+//       message: `Template shared with ${uniqueClients.length} clients in groups successfully`,
+//     });
+//   } catch (err) {
+//     console.error("Error sharing template to groups:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.shareTemplateToGroups = async (req, res) => {
   const { templateId } = req.params;
   const { groupIds = [] } = req.body;
@@ -334,7 +619,7 @@ exports.shareTemplateToGroups = async (req, res) => {
       return res.status(404).json({ message: "Template not found" });
     }
 
-    // Get all clients from the selected groups
+    // Get all clients from selected groups
     const groupClientDocs = await GroupClients.find({
       groupName: { $in: groupIds },
     })
@@ -355,17 +640,17 @@ exports.shareTemplateToGroups = async (req, res) => {
         .json({ message: "No clients found in selected groups" });
     }
 
-    // Resolve logo URL
     const logoUrl = template.logo?.[0]?.filename
       ? `http://98.85.246.54:5966/uploads/${template.logo[0].filename}`
       : null;
 
-    // Build HTML email content
+    // Responsive Email HTML Template
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Template Email</title>
         <style>
           body {
@@ -374,23 +659,31 @@ exports.shareTemplateToGroups = async (req, res) => {
             background-color: ${template.backgroundColor || "#8000b0"};
             font-family: ${template.titleFontFamily || "Arial, sans-serif"};
           }
+
           .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             margin: auto;
             background-color: ${template.backgroundColor || "#8000b0"};
             padding: 20px;
+            box-sizing: border-box;
           }
+
           .logo {
             text-align: center;
             margin-bottom: 20px;
           }
+
           .logo img {
-            max-width: 200px;
+            width: 200px;             /* Keep width fixed at 200px */
+            height: 120px;            /* Increase height (default might have been auto) */
+            object-fit: cover;        /* Ensures image fills height */
             border: 2px solid white;
+            border-radius: 8px;
             display: block;
             margin: 0 auto;
           }
+
           .title {
             background-color: #ffffff;
             color: ${template.titleFontColor || "#000000"};
@@ -400,15 +693,40 @@ exports.shareTemplateToGroups = async (req, res) => {
             font-size: ${template.titleFontSize || 20}px;
             text-align: center;
             padding: 12px 20px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            word-wrap: break-word;
           }
+
           .description {
             background-color: #ffffff;
             color: ${template.desFontColor || "#333333"};
             padding: 20px;
             font-size: 16px;
-            line-height: 1.5;
-            min-height: 200px;
+            line-height: 1.6;
+            min-height: 300px;   /* Increased height only */
+            word-wrap: break-word;
+          }
+
+          @media screen and (max-width: 480px) {
+            .container {
+              padding: 10px;
+            }
+
+            .logo img {
+              width: 150px;        /* Keep width fixed */
+              height: 120px;       /* Increase height for mobile too */
+            }
+
+            .title {
+              font-size: ${Math.floor((template.titleFontSize || 20) * 0.8)}px;
+              padding: 10px;
+            }
+
+            .description {
+              padding: 15px;
+              font-size: 14px;
+              min-height: 250px;   /* Taller description on mobile as well */
+            }
           }
         </style>
       </head>
@@ -426,7 +744,7 @@ exports.shareTemplateToGroups = async (req, res) => {
       </html>
     `;
 
-    // Setup Nodemailer
+    // Nodemailer Setup
     const transporter = require("nodemailer").createTransport({
       service: "gmail",
       auth: {
@@ -435,7 +753,7 @@ exports.shareTemplateToGroups = async (req, res) => {
       },
     });
 
-    // Send emails
+    // Send Emails to Each Client
     for (const client of uniqueClients) {
       const mailOptions = {
         from: "gpt11032024@gmail.com",
@@ -443,6 +761,7 @@ exports.shareTemplateToGroups = async (req, res) => {
         subject: "Here’s a new template for you",
         html: htmlContent,
       };
+
       await transporter.sendMail(mailOptions);
     }
 
