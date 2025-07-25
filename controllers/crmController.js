@@ -77,7 +77,16 @@ exports.createCRM = async (req, res, next) => {
 // Get all CRM entries
 exports.getAllCRM = async (req, res, next) => {
   try {
-    const crms = await CRM.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const crms = await CRM.find()
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalCrms = await CRM.countDocuments();
 
     const crmWithImageURLs = crms.map(crm => {
       const imagesWithURLs = crm.images.map(image => {
@@ -93,15 +102,25 @@ exports.getAllCRM = async (req, res, next) => {
       };
     });
 
-    return next(createSuccess(200, "All CRM entries fetched successfully", {
-      totalCount: crms.length,
-      crms: crmWithImageURLs
-    }));
+    const response = {
+      success: true,
+      status: 200,
+      message: "CRM entries retrieved successfully",
+      data: crmWithImageURLs,
+      pagination: {
+        total: totalCrms,
+        page,
+        limit,
+      },
+    };
 
+    return res.status(200).json(response);
   } catch (error) {
+    console.error("getAllCRM error:", error);
     return next(createError(500, "Internal Server Error"));
   }
 };
+
 
 // Get CRM by ID
 exports.getCRMById = async (req, res, next) => {
