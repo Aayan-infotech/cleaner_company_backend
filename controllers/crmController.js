@@ -74,7 +74,7 @@ exports.createCRM = async (req, res, next) => {
   }
 };
 
-// Get all CRM entries
+// Get all CRM entries with pagination and image URLs
 exports.getAllCRM = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -105,7 +105,7 @@ exports.getAllCRM = async (req, res, next) => {
     const response = {
       success: true,
       status: 200,
-      message: "CRM entries retrieved successfully",
+      message: "All Clients fetched successfully",
       data: crmWithImageURLs,
       pagination: {
         total: totalCrms,
@@ -120,7 +120,6 @@ exports.getAllCRM = async (req, res, next) => {
     return next(createError(500, "Internal Server Error"));
   }
 };
-
 
 // Get CRM by ID
 exports.getCRMById = async (req, res, next) => {
