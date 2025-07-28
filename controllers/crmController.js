@@ -121,6 +121,32 @@ exports.getAllCRM = async (req, res, next) => {
   }
 };
 
+// Get all Clients without pagination and image URLs
+exports.getAllClients = async (req, res, next) => {
+  try {
+    const crms = await CRM.find().sort({ createdAt: -1, _id: -1 });
+
+    const crmWithImageURLs = crms.map(crm => {
+      const imagesWithURLs = crm.images.map(image => {
+        return {
+          ...image._doc,
+          url: `${req.protocol}://${req.get('host')}/uploads/${image.filename}`
+        };
+      });
+
+      return {
+        ...crm._doc,
+        images: imagesWithURLs
+      };
+    });
+
+    return next(createSuccess(200, "All Clients fetched successfully", crmWithImageURLs));
+  } catch (error) {
+    console.error("Error Fetch Get all Clients:", error);
+    return next(createError(500, "Internal Server Error"));
+  }
+};
+
 // Get CRM by ID
 exports.getCRMById = async (req, res, next) => {
   try {
