@@ -15,7 +15,6 @@ exports.createCategory = async (req, res, next) => {
     }
 }
 
-
 exports.getAllCategories = async (req, res, next) => {
   try {
     const page  = Math.max(1, parseInt(req.query.page  || '1',  10));
@@ -43,11 +42,11 @@ exports.getAllCategories = async (req, res, next) => {
       data: categories,
       pagination,
     });
+    
   } catch (error) {
     next(createError(500, "Something went wrong"));
   }
 };
-
 
 exports.getAllCategories2 = async (req, res, next) => {
   try {
@@ -58,17 +57,18 @@ exports.getAllCategories2 = async (req, res, next) => {
   }
 };
 
-
-
-exports.deleteCategory = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        await Category.findByIdAndDelete(id);
-        return next(createSuccess(200, 'Category deleted successfully'));
-    }
-    catch (error) {
-        return next(createError(500, "Something went wrong"));
-    }
+exports.getCategoryById = async (req, res, next) => {
+  try {
+      const { id } = req.params;
+      const category = await Category.findById(id);
+      if (!category) {
+          return next(createError(404, "Category not found"));
+      }
+      return next(createSuccess(200, 'Category fetched successfully', category));
+  }
+  catch (error) {
+      return next(createError(500, "Something went wrong"));
+  }
 }
 
 exports.updateCategory = async (req, res, next) => {
@@ -83,18 +83,15 @@ exports.updateCategory = async (req, res, next) => {
     }
 }
 
-exports.getCategoryById = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const category = await Category.findById(id);
-        if (!category) {
-            return next(createError(404, "Category not found"));
-        }
-        return next(createSuccess(200, 'Category fetched successfully', category));
-    }
-    catch (error) {
-        return next(createError(500, "Something went wrong"));
-    }
+exports.deleteCategory = async (req, res, next) => {
+  try {
+      const { id } = req.params;
+      await Category.findByIdAndDelete(id);
+      return next(createSuccess(200, 'Category deleted successfully'));
+  }
+  catch (error) {
+      return next(createError(500, "Something went wrong"));
+  }
 }
 
 

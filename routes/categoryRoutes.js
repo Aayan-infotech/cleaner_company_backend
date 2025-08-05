@@ -1,12 +1,12 @@
 const express = require('express');
-const { createCategory, getAllCategories, deleteCategory, updateCategory,getCategoryById ,getAllCategories2} = require('../controllers/categoryController');
+const categoryController = require('../controllers/categoryController');
 const router = express.Router();
 
-router.post('/createCategory', createCategory);
-router.get('/getAllCategories', getAllCategories);
-router.delete('/deleteCategory/:id', deleteCategory);
-router.put('/updateCategory/:id', updateCategory);
-router.get('/getCategoryById/:id', getCategoryById);
-router.get('/getAll', getAllCategories2); // This route is for testing purposes
+router.post('/createCategory', categoryController.createCategory);
+router.get('/getAllCategories', categoryController.getAllCategories);
+router.delete('/deleteCategory/:id', categoryController.deleteCategory);
+router.put('/updateCategory/:id', categoryController.updateCategory);
+router.get('/getCategoryById/:id', categoryController.getCategoryById);
+router.get('/getAll', categoryController.getAllCategories2); // This route is for testing purposes
 
 module.exports = router;

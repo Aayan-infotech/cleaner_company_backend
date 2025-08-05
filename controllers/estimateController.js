@@ -193,7 +193,7 @@ exports.createEstimate = async (req, res, next) => {
   }
 };
 
-// GET /api/estimates
+// Get All Estimate without Pagination
 exports.getAllEstimates = async (req, res, next) => {
   try {
     const estimates = await Estimate.find()
@@ -202,6 +202,41 @@ exports.getAllEstimates = async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     return next(createSuccess(200, "All estimates fetched", estimates));
+  } catch (err) {
+    console.error("getAllEstimates error:", err);
+    return next(createError(500, "Internal Server Error"));
+  }
+};
+
+// Get All Estimate With Pagination
+exports.getAllEstimatespagination = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const estimates = await Estimate.find()
+      .populate('jobId')
+      .populate('room')
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalEstimates = await Estimate.countDocuments();
+
+    const response = {
+      success: true,
+      status: 200,
+      message: "All estimates fetched successfully",
+      data: estimates,
+      pagination: {
+        total: totalEstimates,
+        page,
+        limit,
+      },
+    };
+
+    return res.status(200).json(response);
   } catch (err) {
     console.error("getAllEstimates error:", err);
     return next(createError(500, "Internal Server Error"));
