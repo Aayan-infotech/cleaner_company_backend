@@ -5,6 +5,7 @@ const createSuccess = require('../middleware/success');
 const path = require('path');
 const fs = require('fs');
 
+
 //postcategory
 const addCategory = async (req, res, next) => {
   try {
