@@ -99,7 +99,7 @@ app.use('/api2/hardSurfaces', hardSurfaceRoutes);
 app.use('/api2/methods', methodRoutes);
 app.use('/api', imageRoutes);
 app.use('/api/item', itemInventoryRoute);
-app.use('/api/item', orderRoute);
+app.use('/api/item-order', orderRoute);
 app.use('/api/dropdown', dropdownRoute);
 app.use('/api/estimates', estimateRoutes);
 app.use('/api/event', calRoute);
