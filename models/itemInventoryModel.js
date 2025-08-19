@@ -9,7 +9,7 @@ const ItemSchema = mongoose.Schema(
     {
         itemName: { type: String, required: true },
         partNumber: { type: Number, required: false },
-        categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryCategory', required: false },
+        categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories', required: true },
         maxQty: { type: Number, default: 0, required: false },
         minQty: { type: Number, default: 0, required: false },
         vanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Van', required: false },
@@ -31,4 +31,4 @@ const ItemSchema = mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model('Item', ItemSchema); 
+module.exports = mongoose.model('Item', ItemSchema);

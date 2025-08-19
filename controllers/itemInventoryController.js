@@ -7,11 +7,9 @@ const createSuccess = require('../middleware/success');
 const path = require('path');
 const fs = require('fs');
 
-//to create item
-const addItem = async (req, res, next) => {
+// Create item
+exports.addItem = async (req, res, next) => {
   try {
-    const role = await Role.find({ role: 'User' });
-
     const {
       itemName, partNumber, categoryId, maxQty, minQty, vanId, inStock, amtOrder,
       forWarehouse, addOrder, cost, price, comment, shortDes, partDes
@@ -78,13 +76,13 @@ const addItem = async (req, res, next) => {
     return next(createSuccess(200, "Item Addedd Successfully", newItem))
   }
   catch (error) {
-    console.error("Error in addItem:", error);
+    console.error("Error in add Item:", error);
     return next(createError(500, "Something went wrong"));
   }
 }
 
-//get Allitems
-const getAllItems = async (req, res, next) => {
+// Get All items
+exports.getAllItems = async (req, res, next) => {
   try {
     const items = await Item.find().populate('vanId').populate('categoryId');
 
@@ -130,8 +128,77 @@ const getAllItems = async (req, res, next) => {
   }
 };
 
-//get Item
-const getItem = async (req, res, next) => {
+exports.getAllItemsWithPagination = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;   
+    const limit = parseInt(req.query.limit) || 10;  
+    const skip = (page - 1) * limit;
+
+    // Fetch items with pagination
+    const items = await Item.find()
+      .populate('vanId')
+      .populate('categoryId')
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalItems = await Item.countDocuments();
+
+    if (!items || items.length === 0) {
+      return res.status(200).json(createSuccess(200, "No items found", []));
+    }
+
+    const itemsWithURLs = items.map((item) => {
+      const category = item.categoryId
+        ? {
+            _id: item.categoryId._id,
+            categoryName: item.categoryId.categoryName,
+            createdAt: item.categoryId.createdAt,
+            updatedAt: item.categoryId.updatedAt,
+          }
+        : null;
+
+      return {
+        ...item.toObject(),
+        categoryId: category,
+
+        Images: item.Images.map((image) => ({
+          ...image.toObject(),
+          url: `${req.protocol}://${req.get('host')}/uploads/${image.filename}`,
+        })),
+
+        pdfs: item.pdfs.map((pdf) => ({
+          ...pdf.toObject(),
+          url: `${req.protocol}://${req.get('host')}/uploads/${pdf.filename}`,
+        })),
+
+        videos: item.videos.map((video) => ({
+          ...video.toObject(),
+          url: `${req.protocol}://${req.get('host')}/uploads/${video.filename}`,
+        })),
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      status: 200,
+      message: "All Items",
+      data: itemsWithURLs,
+      pagination: {
+        total: totalItems,
+        page,
+        limit,
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return next(createError(500, "Internal Server Error!"));
+  }
+};
+
+// Get Item
+exports.getItem = async (req, res, next) => {
   try {
     const item = await Item.findById(req.params.id);
     if (!item) {
@@ -161,7 +228,7 @@ const getItem = async (req, res, next) => {
 }
 
 //update item
-const updateItem = async (req, res, next) => {
+exports.updateItem = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -201,7 +268,7 @@ const updateItem = async (req, res, next) => {
 };
 
 //delete item
-const deleteItem = async (req, res, next) => {
+exports.deleteItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const item = await Item.findByIdAndDelete(id);
@@ -215,7 +282,7 @@ const deleteItem = async (req, res, next) => {
 }
 
 //  get all item for warehouse whare warehouse is true
-const getAllItemForWarehouse = async (req, res, next) => {
+exports.getAllItemForWarehouse = async (req, res, next) => {
   try {
     const items = await Item.find({ forWarehouse: true });
     return next(createSuccess(200, "Items for Warehouse", items));
@@ -226,7 +293,7 @@ const getAllItemForWarehouse = async (req, res, next) => {
 };
 
 //  get all ietm for van
-const getAllItemForVan = async (req, res, next) => {
+exports.getAllItemForVan = async (req, res, next) => {
   try {
     const items = await Item.find({ forVan: true });
     return next(createSuccess(200, "Items for Van", items));
@@ -236,7 +303,7 @@ const getAllItemForVan = async (req, res, next) => {
 };
 
 // get all items where vanName is available
-const getAllItemsWithVanName = async (req, res, next) => {
+exports.getAllItemsWithVanName = async (req, res, next) => {
   try {
     const items = await Item.find({ vanName: { $exists: true, $ne: "" } });
     next(createSuccess(200, "Items with vanName", items));
@@ -246,7 +313,7 @@ const getAllItemsWithVanName = async (req, res, next) => {
 };
 
 // transfer from warehouse to van
-const transferItem = async (req, res, next) => {
+exports.transferItem = async (req, res, next) => {
   try {
     const { sourceItemId, destinationVanId, transferQuantity } = req.body;
 
@@ -314,7 +381,7 @@ const transferItem = async (req, res, next) => {
 };
 
 // transfer from one van to another
-const transferItemToVan = async (req, res, next) => {
+exports.transferItemToVan = async (req, res, next) => {
   try {
     const { sourceItemId, destinationVanId, transferQuantity } = req.body;
 
@@ -384,7 +451,7 @@ const transferItemToVan = async (req, res, next) => {
 };
 
 // file function
-const getFile = (req, res) => {
+exports.getFile = (req, res) => {
   const filepath = path.join(__dirname, '../uploads', req.params.filename);
 
   fs.readFile(filepath, (err, data) => {
@@ -415,6 +482,3 @@ const getFile = (req, res) => {
     res.send(data);
   });
 };
-
-
-module.exports = { addItem, getAllItems, getItem, updateItem, deleteItem, getAllItemForWarehouse, getAllItemForVan, getAllItemsWithVanName, transferItem, transferItemToVan, getFile }
