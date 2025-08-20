@@ -219,7 +219,7 @@ exports.deleteTemplate = async (req, res, next) => {
 //     }
 
 //     const logoUrl = template.logo?.[0]?.filename
-//       ? `http://localhost:5966/uploads/${template.logo[0].filename}`
+//       ? `http://44.198.242.234:5966/uploads/${template.logo[0].filename}`
 //       : null;
 
 
@@ -333,7 +333,7 @@ exports.shareTemplateToClients = async (req, res) => {
     }
 
     const logoUrl = template.logo?.[0]?.filename
-      ? `http://localhost:5966/uploads/${template.logo[0].filename}`
+      ? `http://44.198.242.234:5966/uploads/${template.logo[0].filename}`
       : null;
 
     const htmlContent = `
@@ -505,7 +505,7 @@ exports.shareTemplateToClients = async (req, res) => {
 
 //     // Resolve logo URL
 //     const logoUrl = template.logo?.[0]?.filename
-//       ? `http://localhost:5966/uploads/${template.logo[0].filename}`
+//       ? `http://44.198.242.234:5966/uploads/${template.logo[0].filename}`
 //       : null;
 
 //     // Build HTML email content
@@ -641,7 +641,7 @@ exports.shareTemplateToGroups = async (req, res) => {
     }
 
     const logoUrl = template.logo?.[0]?.filename
-      ? `http://localhost:5966/uploads/${template.logo[0].filename}`
+      ? `http://44.198.242.234:5966/uploads/${template.logo[0].filename}`
       : null;
 
     // Responsive Email HTML Template
