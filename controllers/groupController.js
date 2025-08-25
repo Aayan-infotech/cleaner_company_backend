@@ -4,6 +4,7 @@ const createError = require("../middleware/error");
 const createSuccess = require("../middleware/success");
 const mongoose = require("mongoose");
 
+// Group creation and management functions
 exports.createGroup = async (req, res, next) => {
   try {
     const { groupName } = req.body;
@@ -70,6 +71,41 @@ exports.getAllGroups = async (req, res, next) => {
   }
 };
 
+exports.getAllGroupsNoPaginated = async (req, res, next) => {
+  try {
+    const groups = await Group.find().sort({ createdAt: -1 }).lean();
+
+    const groupIds = groups.map((g) => g._id);
+    const gcs = await GroupClients.find({ groupName: { $in: groupIds } })
+      .populate({
+        path: "clients",
+        select:
+          "-secondaryName -secondaryEmail -secondaryPhones -secondaryAddress",
+      })
+      .lean();
+
+    const clientMap = gcs.reduce((map, gc) => {
+      map[gc.groupName.toString()] = gc.clients;
+      return map;
+    }, {});
+
+    const data = groups.map((g) => ({
+      ...g,
+      clients: clientMap[g._id.toString()] || [],
+    }));
+
+    return res.status(200).json({
+      success: true,
+      status: 200,
+      message: "Groups fetched successfully",
+      data,
+    });
+  } catch (err) {
+    console.error("getAllGroups error:", err);
+    return next(createError(500, "Failed to fetch groups"));
+  }
+};
+
 exports.getGroupById = async (req, res, next) => {
   try {
     const { id: groupId } = req.params;
@@ -117,6 +153,25 @@ exports.updateGroupName = async (req, res, next) => {
   }
 };
 
+exports.deleteGroup = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findByIdAndDelete(id);
+
+    if (!group) {
+      return next(createError(404, `Group not found.`));
+    }
+
+    return next(createSuccess(200, "Group deleted successfully", null));
+  } catch (err) {
+    console.error("deleteGroup error:", err);
+    return next(createError(500, "Internal Server Error"));
+  }
+};
+
+
+
+// Manage Clients and Groups sections
 exports.addClients = async (req, res, next) => {
   try {
     const { clients } = req.body;
@@ -312,22 +367,6 @@ exports.removeGroup = async (req, res, next) => {
   }
 };
 
-exports.deleteGroup = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const group = await Group.findByIdAndDelete(id);
-
-    if (!group) {
-      return next(createError(404, `Group not found.`));
-    }
-
-    return next(createSuccess(200, "Group deleted successfully", null));
-  } catch (err) {
-    console.error("deleteGroup error:", err);
-    return next(createError(500, "Internal Server Error"));
-  }
-};
-
 exports.getGroupClients = async (req, res, next) => {
   try {
     const { id: groupId } = req.params;
@@ -383,30 +422,20 @@ exports.getGroupChildGroups = async (req, res, next) => {
   try {
     const { id: parentGroupId } = req.params;
 
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
-    const skip = (page - 1) * limit;
-
     // Parent group ka record find karo
-    const gc = await GroupClients.findOne({ groupName: parentGroupId }).lean();
+    const gc = await GroupClients.findOne({ groupName: parentGroupId })
+      .populate({
+        path: "groups",
+        select: "groupName createdAt updatedAt",
+        options: { sort: { createdAt: -1 } },
+      })
+      .lean();
+
     if (!gc) {
       return next(
         createError(404, `GroupClients not found for group "${parentGroupId}".`)
       );
     }
-
-    // Total groups count
-    const totalGroups = Array.isArray(gc.groups) ? gc.groups.length : 0;
-    const totalPages = Math.ceil(totalGroups / limit);
-
-    // Paginated populate
-    const paged = await GroupClients.findOne({ groupName: parentGroupId })
-      .populate({
-        path: "groups",
-        select: "groupName createdAt updatedAt",
-        options: { skip, limit, sort: { createdAt: -1 } },
-      })
-      .lean();
 
     return res.status(200).json({
       success: true,
@@ -417,13 +446,7 @@ exports.getGroupChildGroups = async (req, res, next) => {
         _id: gc._id,
         createdAt: gc.createdAt,
         updatedAt: gc.updatedAt,
-        groups: paged.groups || [],
-      },
-      pagination: {
-        totalGroups,
-        totalPages,
-        page,
-        limit,
+        groups: gc.groups || [],
       },
     });
   } catch (err) {
@@ -431,3 +454,4 @@ exports.getGroupChildGroups = async (req, res, next) => {
     return next(createError(500, "Internal Server Error"));
   }
 };
+

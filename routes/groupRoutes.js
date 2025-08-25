@@ -5,9 +5,11 @@ const group = require("../controllers/groupController");
 
 router.post("/create", group.createGroup);
 router.get("/getAll", group.getAllGroups);
+router.get("/get-all-no-paginated", group.getAllGroupsNoPaginated);
 router.get("/getById/:id", group.getGroupById);
 router.put("/update/:id", group.updateGroupName);
 router.delete("/delete/:id", group.deleteGroup);
+
 router.post("/addClients/:id", group.addClients);
 router.post("/addGroups/:id", group.addGroups);
 router.delete("/delete/:id/:clientId", group.removeClient);
