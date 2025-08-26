@@ -3,6 +3,7 @@ const createError = require("../middleware/error");
 const createSuccess = require("../middleware/success");
 const path = require('path');
 const fs = require('fs');
+const mongoose = require("mongoose");
 
 // Default Profile Picture
 const defaultImage = {
@@ -272,5 +273,40 @@ exports.deleteCRMById = async (req, res, next) => {
     return next(createSuccess(200, "CRM entry deleted successfully", deleted));
   } catch (error) {
     return next(createError(500, "Internal Server Error"));
+  }
+};
+
+exports.deleteMultipleCRMs = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids) {
+      return next(createError(400, "Please select at least one client to delete."));
+    }
+
+    if (!Array.isArray(ids)) {
+      return next(createError(400, "Invalid request format. Please try again."));
+    }
+
+    if (ids.length === 0) {
+      return next(createError(400, "No clients selected for deletion."));
+    }
+
+    const invalidIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+    if (invalidIds.length > 0) {
+      return next(createError(400, "Some selected clients could not be processed. Please try again."));
+    }
+
+    const result = await CRM.deleteMany({ _id: { $in: ids } });
+
+    if (result.deletedCount === 0) {
+      return next(createError(404, "No matching clients found to delete."));
+    }
+
+    return next(createSuccess(200, `${result.deletedCount} client(s) deleted successfully.`));
+
+  } catch (error) {
+    console.error("Error deleting multiple CRM entries:", error);
+    return next(createError(500, "Something went wrong while deleting clients. Please try again later."));
   }
 };
