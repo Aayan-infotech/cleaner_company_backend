@@ -9,6 +9,6 @@ router.get("/get-all-clients", crmController.getAllClients);
 router.get("/get/:id", crmController.getCRMById);
 router.put("/update/:id", upload.array('images'), crmController.updateCRMById);
 router.delete("/delete/:id", crmController.deleteCRMById);
-
+router.delete("/delete-multiple", crmController.deleteMultipleCRMs);
 
 module.exports = router;
