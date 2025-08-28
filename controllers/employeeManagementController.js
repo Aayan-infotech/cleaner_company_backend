@@ -13,6 +13,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname));
   },
 });
+
 const upload = multer({ storage: storage });
 
 exports.addEmployee = [
@@ -166,6 +167,18 @@ exports.getAllEmployees = async (req, res, next) => {
   }
 };
 
+exports.getAllEmployee = async (req, res, next) => {
+  try {
+    const employees = await Employee.find();
+
+    return next(createSuccess(200, "Employees fetched successfully.", employees));
+
+  } catch (error) {
+    console.error("getAllEmployees error:", error);
+    return next(createError(500, "Internal Server Error"));
+  }
+};
+
 exports.getEmployeeById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -284,6 +297,7 @@ exports.deleteEmployee = async (req, res, next) => {
     return next(createError(500, "Internal Server Error!"));
   }
 };
+
 exports.updateEmployeeStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
