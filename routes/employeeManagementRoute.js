@@ -1,28 +1,15 @@
 const express = require('express');
-const {
-    addEmployee,
-    getAllEmployees,
-    getEmployeeById,
-    updateEmployeeDetails,
-    deleteEmployee,
-    updateEmployeeStatus,
-    updatePassword
-} = require('../controllers/employeeManagementController');
+const employeeController = require('../controllers/employeeManagementController');
 const router = express.Router();
 
-router.post('/addEmployee', addEmployee);// Add new employee
-
-router.get('/getAllEmployees', getAllEmployees);
-
-router.get('/getEmployee/:id', getEmployeeById);
-
-router.put('/updateEmployee/:id', updateEmployeeDetails);
-
-router.delete('/deleteEmployee/:id', deleteEmployee);
-
-router.put('/updateEmployeeStatus/:id', updateEmployeeStatus);
-
-router.put('/updatePassword/:id', updatePassword)
+router.post('/addEmployee', employeeController.addEmployee);
+router.get('/getAllEmployees', employeeController.getAllEmployees);
+router.get('/get-all-employees', employeeController.getAllEmployee);
+router.get('/getEmployee/:id', employeeController.getEmployeeById);
+router.put('/updateEmployee/:id', employeeController.updateEmployeeDetails);
+router.delete('/deleteEmployee/:id', employeeController.deleteEmployee);
+router.put('/updateEmployeeStatus/:id', employeeController.updateEmployeeStatus);
+router.put('/updatePassword/:id', employeeController.updatePassword)
 
 module.exports = router;
 
