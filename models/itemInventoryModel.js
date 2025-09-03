@@ -12,7 +12,7 @@ const ItemSchema = mongoose.Schema(
         categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories', required: true },
         maxQty: { type: Number, default: 0, required: false },
         minQty: { type: Number, default: 0, required: false },
-        vanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Van', required: false },
+        // vanId: { type: mongoose.Schema.Types.ObjectId, ref: 'Van', required: false },
         inStock: { type: Number, required: false },
         amtOrder: { type: Number, required: false },
         forWarehouse: { type: Boolean, required: false },

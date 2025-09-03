@@ -11,7 +11,9 @@ const fs = require('fs');
 exports.addItem = async (req, res, next) => {
   try {
     const {
-      itemName, partNumber, categoryId, maxQty, minQty, vanId, inStock, amtOrder,
+      itemName, partNumber, categoryId, maxQty, minQty,
+      //  vanId,
+       inStock, amtOrder,
       forWarehouse, addOrder, cost, price, comment, shortDes, partDes
     } = req.body;
 
@@ -67,7 +69,9 @@ exports.addItem = async (req, res, next) => {
     }
 
     const newItem = new Item({
-      itemName, partNumber, categoryId, maxQty, minQty, vanId, inStock,
+      itemName, partNumber, categoryId, maxQty, minQty,
+      //  vanId,
+       inStock,
       amtOrder, forWarehouse, addOrder, cost, price, comment, shortDes,
       partDes, Images, pdfs, videos
     });
@@ -136,7 +140,7 @@ exports.getAllItemsWithPagination = async (req, res, next) => {
 
     // Fetch items with pagination
     const items = await Item.find()
-      .populate('vanId')
+      // .populate('vanId')
       .populate('categoryId')
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
