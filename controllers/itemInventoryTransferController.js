@@ -90,10 +90,14 @@ exports.getAllTransfers = async (req, res, next) => {
   try {
     const transfers = await VanStock.find()
       .populate("vanId", "vanName createdAt updatedAt")
-      .populate(
-        "items.itemId",
-        "itemName partNumber maxQty minQty inStock cost price"
-      )
+      .populate({
+        path: "items.itemId",
+        select: "itemName partNumber maxQty minQty inStock cost price categoryId",
+        populate: {
+          path: "categoryId",
+          select: "categoryName createdAt updatedAt"
+        }
+      })
       .sort({ createdAt: -1 });
 
     return next(
