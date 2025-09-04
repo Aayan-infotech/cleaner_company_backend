@@ -93,7 +93,8 @@ exports.getAllTransfers = async (req, res, next) => {
       .populate(
         "items.itemId",
         "itemName partNumber maxQty minQty inStock cost price"
-      );
+      )
+      .sort({ createdAt: -1 });
 
     return next(
       createSuccess(200, "Transfers fetched successfully", transfers)
@@ -147,7 +148,7 @@ exports.deleteTransferById = async (req, res, next) => {
     }
 
     return next(createSuccess(200, "Transfer deleted successfully", transfer));
-    
+
   } catch (error) {
     console.error("Error deleting transfer:", error);
     return next(createError(500, "Internal Server Error!"));
