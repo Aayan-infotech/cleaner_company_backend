@@ -316,7 +316,7 @@ exports.getAllItemsWithVanName = async (req, res, next) => {
   }
 };
 
-// transfer from warehouse to van
+// Item transfer from warehouse to van
 exports.transferItem = async (req, res, next) => {
   try {
     const { sourceItemId, destinationVanId, transferQuantity } = req.body;
@@ -357,6 +357,7 @@ exports.transferItem = async (req, res, next) => {
         minimumQuantity: 0,  // No minimum quantity for items in vans
         forWarehouse: false,
         categoryName: sourceItem.categoryName,
+        categoryId: sourceItem.categoryId, 
         vanName: destinationVan.vanName,  // Store the actual van name here
       });
     }

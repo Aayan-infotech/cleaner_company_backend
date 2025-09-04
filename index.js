@@ -83,6 +83,7 @@ const categoryRoute = require('./routes/categoryRoutes');
 const templateRoutes = require('./routes/templateRoutes');
 const templateRoute2 = require('./routes/templateRoute2');
 const marketingCategoriesRoutes = require('./routes/marketingCategoriesRoute');
+const itemInventoryTransferRoutes = require('./routes/itemInventoryTransferRoutes');
 
 
 // Routes
@@ -139,6 +140,7 @@ app.use('/api/category', troubleshootCategoryRoute);
 app.use('/api/template', express.text({ type: '*/*', limit: '10mb' }), templateRoutes);
 app.use('/api/template2', templateRoute2);
 app.use('/api/manage-marketing-categories', marketingCategoriesRoutes);
+app.use('/api/item-inventory-transfer', itemInventoryTransferRoutes)
 
 
 // Response handler Middleware
